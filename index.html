@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Itmp : Internet of Things Messaging Protocol ITMP">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Itmp</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/neolp/itmp">View on GitHub</a>
+
+          <h1 id="project_title">Itmp</h1>
+          <h2 id="project_tagline">Internet of Things Messaging Protocol ITMP</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/neolp/itmp/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/neolp/itmp/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="itmp" class="anchor" href="#itmp" aria-hidden="true"><span class="octicon octicon-link"></span></a>itmp</h1>
+
+<p>Internet of Things Messaging Protocol (ITMP)</p>
+
+<p>ITMP is a routable protocol that provides two messaging patterns: Publish &amp; Subscribe and Remote Procedure Calls, and the Service Discovery ability. It is intended to connect application components in distributed applications. ITMP uses WebSocket as its default transport, but can be transmitted via any other protocol that allows for bi-directional, and message-oriented communications.</p>
+
+<h1>
+<a id="1-introduction" class="anchor" href="#1-introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>1. Introduction</h1>
+
+<h2>
+<a id="11-background" class="anchor" href="#11-background" aria-hidden="true"><span class="octicon octicon-link"></span></a>1.1. Background</h2>
+
+<p>The WebSocket protocol brings bi-directional real-time connections to the browser. It defines an API at the message level, requiring users who want to use WebSocket connections in their applications to define their own semantics on top of it.
+The Internet of Thinks Messaging Protocol (ITMP) is intended to provide application developers with the semantics they need to handle messaging between components in distributed applications.
+ITMP is a route-able protocol, with all components can connect to a ITMP Router, where the ITMP Router performs message routing between the components.
+ITMP provides two messaging patterns: Publish &amp; Subscribe and Remote Procedure Calls.
+Publish &amp; Subscribe (PubSub) is an established messaging pattern where a component, the <em>Subscriber</em>, informs the router that it wants to receive information on a topic (i.e., it subscribes to a topic).
+Another component, a <em>Publisher</em>, can then publish to this topic, and the router distributes events to all Subscribers.
+Remote Procedure Calls (RPCs) rely on the same sort of decoupling that is used by the Publish &amp; Subscribe pattern. A component, the <em>Callee</em>, announces to the router that it provides a certain procedure, identified by a procedure name. Other components, <em>Callers</em>, can then call the procedure, with the router invoking the procedure on the Callee, receiving the procedure's result, and then forwarding this result back to the Caller. Routed RPCs differ from traditional client-server RPCs in that the router serves as an intermediary between the Caller and the Callee.
+The decoupling in routed RPCs arises from the fact that the Caller is no longer required to have knowledge of the Callee; it merely needs to know the identifier of the procedure it wants to call. There is
+also no longer a need for a direct connection between the caller and the callee, since all traffic is routed. This enables the calling of procedures in components which are not reachable externally (e.g. on a NATted connection) but which can establish an outgoing connection to the ITMP router.
+Combining these two patterns into a single protocol allows it to be used for the entire messaging requirements of an application, thus reducing technology stack complexity, as well as networking overheads.</p>
+
+<h2>
+<a id="12-protocol-overview" class="anchor" href="#12-protocol-overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>1.2. Protocol Overview</h2>
+
+<p>The PubSub messaging pattern defines three roles: <em>Subscribers</em> and <em>Publishers</em>, which communicate via a <em>Broker</em>.
+The RPC messaging pattern also defines three roles: <em>Callers</em> and <em>Callees</em>, which communicate via a <em>Dealer</em>.
+ITMP Connections are established by <em>Clients</em> to a <em>Router</em>. Connections can use any transport that is message-based and bi-directional, with WebSocket as the default transport.
+A Router is a component which implements one or both of the Broker and Dealer roles. A Client is a component which implements any or all of the Subscriber, Publisher, Caller, or Callee roles.
+ITMP <em>Connections</em> are established by Clients to a Router. Connections can use any transport which is message-oriented, ordered, reliable and bi-directional, with WebSocket as the default transport.
+ITMP <em>Sessions</em> are established over a ITMP Connection. A ITMP Session is joined to a <em>Realm</em> on a Router. Routing occurs only between ITMP Sessions that have joined the same Realm.</p>
+
+<h3>
+<a id="132-application-code" class="anchor" href="#132-application-code" aria-hidden="true"><span class="octicon octicon-link"></span></a>1.3.2. Application Code</h3>
+
+<p>ITMP is designed for application code to run within Clients, i.e. <em>Peers</em> having the roles Callee, Caller, Publisher, and Subscriber.
+Routers, i.e. Peers of the roles Brokers are responsible for <em>generic call and event routing</em>. This allows the transparent exchange of Broker implementations without affecting the application and to distribute and deploy application components flexibly.</p>
+
+<h3>
+<a id="133-language-agnostic" class="anchor" href="#133-language-agnostic" aria-hidden="true"><span class="octicon octicon-link"></span></a>1.3.3. Language Agnostic</h3>
+
+<p>ITMP is language agnostic, i.e. can be implemented in any programming language. At the level of arguments that may be part of a ITMP message, ITMP takes a 'superset of all' approach. ITMP implementations may support features of the implementing language for use in arguments.</p>
+
+<h3>
+<a id="134-router-implementation-specifics" class="anchor" href="#134-router-implementation-specifics" aria-hidden="true"><span class="octicon octicon-link"></span></a>1.3.4. Router Implementation Specifics</h3>
+
+<p>This specification only deals with the protcol level. Specific ITMP Broker and Dealer implementations may differ in aspects such as support for:
+authentication and authorization schemes,
+message persistence, and,
+management and monitoring.
+The definition and documentation of such Router features is outside the scope of this document.</p>
+
+<h2>
+<a id="14-relationship-to-websocket" class="anchor" href="#14-relationship-to-websocket" aria-hidden="true"><span class="octicon octicon-link"></span></a>1.4. Relationship to WebSocket</h2>
+
+<p>ITMP uses WebSocket as its default transport binding, and is a registered WebSocket subprotocol.</p>
+
+<h1>
+<a id="2-conformance-requirements" class="anchor" href="#2-conformance-requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>2. Conformance Requirements</h1>
+
+<p>All diagrams, examples, and notes in this specification are non-normative, as are all sections explicitly marked non-normative. Everything else in this specification is normative.
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119 [RFC2119].
+Requirements phrased in the imperative as part of algorithms (such as "strip any leading space characters" or "return false and abort these steps") are to be interpreted with the meaning of the key word
+("MUST", "SHOULD", "MAY", etc.) used in introducing the algorithm.</p>
+
+<p>Conformance requirements phrased as algorithms or specific steps MAY be implemented in any manner, so long as the end result is equivalent.</p>
+
+<h2>
+<a id="21-terminology-and-other-conventions" class="anchor" href="#21-terminology-and-other-conventions" aria-hidden="true"><span class="octicon octicon-link"></span></a>2.1. Terminology and Other Conventions</h2>
+
+<p>Key terms such as named algorithms or definitions are indicated like <em>this</em> when they first occur, and are capitalized throughout the text.</p>
+
+<h1>
+<a id="3-realms-sessions-and-transports" class="anchor" href="#3-realms-sessions-and-transports" aria-hidden="true"><span class="octicon octicon-link"></span></a>3. Realms, Sessions and Transports</h1>
+
+<p>A Realm is a ITMP routing and administrative domain, optionally protected by authentication and authorization. ITMP messages are only routed within a Realm. Realm with empty name is default.
+A Session is a transient conversation between two Peers attached to a Realm and running over a Transport.
+A Transport connects two ITMP Peers and provides a channel over which ITMP messages for a ITMP Session can flow in both directions.
+ITMP can run over any Transport which is message-based, bidirectional, reliable and ordered.
+The default transport for ITMP is WebSocket [RFC6455], where ITMP is an officially registered [1] subprotocol.</p>
+
+<h1>
+<a id="4-peers-and-roles" class="anchor" href="#4-peers-and-roles" aria-hidden="true"><span class="octicon octicon-link"></span></a>4. Peers and Roles</h1>
+
+<p>A ITMP Session connects two Peers. Each ITMP Peer MUST implement one role, and MAY implement more roles.
+A Client MAY implement any combination of the Roles:
+Callee
+Caller
+Publisher
+Subscriber
+Broker
+This document describes ITMP as in client-to-router communication and direct client-to-client communication is supported by ITMP. Router-to-router communication MAY be defined same way.</p>
+
+<h2>
+<a id="41-symmetric-messaging" class="anchor" href="#41-symmetric-messaging" aria-hidden="true"><span class="octicon octicon-link"></span></a>4.1. Symmetric Messaging</h2>
+
+<p>It is important to note that though the establishment of a Transport might have a inherent asymmetry (like a TCP client establishing a WebSocket connection to a server), and Clients establish ITMP sessions by attaching to Realms on Routers, ITMP itself is designed to be fully symmetric for application components.
+After the transport and a session have been established, any application component may act as Caller, Callee, Publisher and Subscriber at the same time. And Routers provide the fabric on top of which ITMP runs a symmetric application messaging service.</p>
+
+<h2>
+<a id="42-remote-procedure-call-roles" class="anchor" href="#42-remote-procedure-call-roles" aria-hidden="true"><span class="octicon octicon-link"></span></a>4.2. Remote Procedure Call Roles</h2>
+
+<p>The Remote Procedure Call messaging pattern involves peers of two different roles:
+Callee
+Caller
+A Caller issues calls to remote procedures by providing the procedure URI and any arguments for the call. The Callee will execute the procedure using the supplied arguments to the call and return the result of the call to the Caller.
+The Caller and Callee will usually run application code, while the Broker works as a generic router for remote procedure calls decoupling Callers and Callees.</p>
+
+<h2>
+<a id="43-publish--subscribe-roles" class="anchor" href="#43-publish--subscribe-roles" aria-hidden="true"><span class="octicon octicon-link"></span></a>4.3. Publish &amp; Subscribe Roles</h2>
+
+<p>The Publish &amp; Subscribe messaging pattern involves peers of three different roles:
+Subscriber
+Publisher
+A Publishers publishes events to topics by providing the topic URI and any payload for the event. Subscribers of the topic will receive the event together with the event payload.
+Subscribers subscribe to topics they are interested in with Brokers. Publishers initiate publication first at Brokers. Brokers route events incoming from Publishers to Subscribers that are subscribed to respective topics.
+The Publisher and Subscriber will usually run application code, while the Broker works as a generic router for events decoupling Publishers from Subscribers.</p>
+
+<h2>
+<a id="44-peers-with-multiple-roles" class="anchor" href="#44-peers-with-multiple-roles" aria-hidden="true"><span class="octicon octicon-link"></span></a>4.4. Peers with multiple Roles</h2>
+
+<p>Note that Peers might implement more than one role: e.g. a Peer might act as Caller, Publisher and Subscriber at the same time. Another Peer might act also as Broker.</p>
+
+<h1>
+<a id="5-building-blocks" class="anchor" href="#5-building-blocks" aria-hidden="true"><span class="octicon octicon-link"></span></a>5. Building Blocks</h1>
+
+<p>ITMP is defined with respect to the following building blocks
+1. Identifiers
+2. Serializations
+3. Transports
+For each building block, ITMP only assumes a defined set of requirements, which allows to run ITMP variants with different concrete bindings.</p>
+
+<h2>
+<a id="51-identifiers" class="anchor" href="#51-identifiers" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.1. Identifiers</h2>
+
+<h3>
+<a id="511-uris" class="anchor" href="#511-uris" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.1.1. URIs</h3>
+
+<p>ITMP needs to identify the following persistent resources:</p>
+
+<ol>
+<li>Topics</li>
+<li>Procedures</li>
+<li>Errors</li>
+</ol>
+
+<p>These are identified in ITMP using Uniform Resource Identifiers (URIs) [RFC3986] that MUST be Unicode strings.
+When using JSON as ITMP serialization format, URIs (as other strings) are transmitted in UTF-8 [RFC3629] encoding.
+<em>Examples</em>
+"com.myapp.mytopic1"
+"com.myapp.myprocedure1"
+The URIs are understood to form a single, global, hierarchical namespace for ITMP.
+The namespace is unified for topics, procedures and errors - these different resource types do NOT have separate namespaces.
+To avoid resource naming conflicts, the package naming convention from Java is used, where URIs SHOULD begin with (reversed) domain names owned by the organization defining the URI.</p>
+
+<h4>
+<a id="5111-relaxedloose-uris" class="anchor" href="#5111-relaxedloose-uris" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.1.1.1. Relaxed/Loose URIs</h4>
+
+<p>URI components (the parts between two "."s, the head part up to the first ".", the tail part after the last ".") MUST NOT contain a ".", "#" or whitespace characters and MUST NOT be empty (zero-length strings), except for whole URI that can be an empty string.
+The restriction not to allow "." in component strings is due to the fact that "." is used to separate components, and ITMP associates semantics with resource hierarchies, such as in pattern-based subscriptions. The restriction not to allow empty (zero-length) strings as components is due to the fact that this may be used to denote wildcard components with pattern-based subscriptions and registrations in the Advanced Profile. The character "#" is not allowed since this is reserved for internal use by Brokers.
+As an example, the following regular expression could be used in Python to check URIs according to the above rules:</p>
+
+<pre><code>loose URI check disallowing empty URI components
+pattern = re.compile(r"^([^\s\.#]+\.)*([^\s\.#]+)$")
+</code></pre>
+
+<p>When empty URI components are allowed (which is the case for specific messages that are part of the Advanced Profile), this following regular expression can be used (shown used in Python):</p>
+
+<pre><code>loose URI check allowing empty URI components
+pattern = re.compile(r"^(([^\s\.#]+\.)|\.)*([^\s\.#]+)?$")
+</code></pre>
+
+<h4>
+<a id="5112-strict-uris" class="anchor" href="#5112-strict-uris" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.1.1.2. Strict URIs</h4>
+
+<p>While the above rules MUST be followed, following a stricter URI rule is recommended: URI components SHOULD only contain lower-case letters, digits and "_".
+As an example, the following regular expression could be used in Python to check URIs according to the above rules:</p>
+
+<pre><code>strict URI check disallowing empty URI components
+pattern = re.compile(r"^([0-9a-z\_]+\.)*([0-9a-z_]+)$")
+</code></pre>
+
+<p>When empty URI components are allowed (which is the case for specific messages), the following regular expression can be used (shown in Python):</p>
+
+<pre><code>strict URI check allowing empty URI components
+pattern = re.compile(r"^(([0-9a-z_]+\.)|\.)*([0-9a-z_]+)?$")
+</code></pre>
+
+<p>Following the suggested regular expression will make URI components valid identifiers in most languages (modulo URIs starting with a digit and language keywords) and the use of lower-case only will make those identifiers unique in languages that have case-insensitive identifiers. Following this suggestion can allow implementations to map topics, procedures and errors to the language environment in a completely transparent way.</p>
+
+<h3>
+<a id="512-ids" class="anchor" href="#512-ids" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.1.2. IDs</h3>
+
+<p>ITMP needs to identify the following ephemeral entities each in the scope noted:</p>
+
+<ol>
+<li>Sessions (<em>global scope</em>)</li>
+<li>Publications (<em>global scope</em>)</li>
+<li>Subscriptions (<em>router scope</em>)</li>
+<li>Requests (<em>session scope</em>)</li>
+</ol>
+
+<p>These are identified in ITMP using IDs that are integers between (inclusive) <em>0</em> and <em>2^53</em> (9007199254740992):
+IDs in the <em>global scope</em> MUST be drawn <em>randomly</em> from a <em>uniform distribution</em> over the complete range [0, 2^53]
+IDs in the <em>router scope</em> can be chosen freely by the specific router implementation
+IDs in the <em>session scope</em> SHOULD be incremented by 1 beginning with 1 (for each direction - <em>Client-to-Router</em> and <em>Router-to-Client</em>)
+The reason to choose the specific upper bound is that 2^53 is the largest integer such that this integer and <em>all</em> (positive) smaller integers can be represented exactly in IEEE-754 doubles. Some languages (e.g. JavaScript) use doubles as their sole number type. Most languages do have signed and unsigned 64-bit integer types that both can hold any value from the specified range.
+The following is a complete list of usage of IDs in the three categories for all ITMP messages. For a full definition of these see Section 6.</p>
+
+<h4>
+<a id="5121-global-scope-ids" class="anchor" href="#5121-global-scope-ids" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.1.2.1. Global Scope IDs</h4>
+
+<ul>
+<li>"CONNECTED.Session"</li>
+<li>"PUBLISHED.Publication"</li>
+</ul>
+
+<h4>
+<a id="5122-router-scope-ids" class="anchor" href="#5122-router-scope-ids" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.1.2.2. Router Scope IDs</h4>
+
+<ul>
+<li>"SUBSCRIBED.Subscription"</li>
+</ul>
+
+<h4>
+<a id="5123-session-scope-ids" class="anchor" href="#5123-session-scope-ids" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.1.2.3. Session Scope IDs</h4>
+
+<ul>
+<li>"PUBLISH.Request"</li>
+<li>"SUBSCRIBE.Request"</li>
+<li>"UNSUBSCRIBE.Request"</li>
+<li>"CALL.Request"</li>
+</ul>
+
+<h2>
+<a id="52-serializations" class="anchor" href="#52-serializations" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.2. Serializations</h2>
+
+<p>ITMP is a message based protocol that requires serialization of messages to octet sequences to be sent out on the wire.
+A message serialization format is assumed that (at least) provides the following types:</p>
+
+<ul>
+<li>"integer"</li>
+<li>"string" (UTF-8 encoded Unicode)</li>
+<li>"bool"</li>
+<li>"list"</li>
+<li>"dict" (with string keys)</li>
+</ul>
+
+<p>ITMP <em>itself</em> only uses the above types, e.g. it does not use the JSON data types "number" (non-integer) and "null". The <em>application payloads</em> transmitted by ITMP (e.g. in call arguments or event payloads) may use other types a concrete serialization format supports.
+There is no required serialization or set of serializations for ITMP implementations (but each implementation MUST, of course, implement at least one serialization format). Routers SHOULD implement more than one serialization format, enabling components using different kinds of serializations to connect to each other.
+ITMP defines two bindings for message serialization:</p>
+
+<ol>
+<li>JSON</li>
+<li>CBOR</li>
+</ol>
+
+<p>Other bindings for serialization may be defined in future ITMP versions.</p>
+
+<h3>
+<a id="521-json" class="anchor" href="#521-json" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.2.1. JSON</h3>
+
+<p>With JSON serialization, each ITMP message is serialized according to the JSON specification as described in RFC4627.
+Further, binary data follows a convention for conversion to JSON strings. For details see the Appendix.</p>
+
+<h3>
+<a id="522-cbor" class="anchor" href="#522-cbor" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.2.2. CBOR</h3>
+
+<p>With CBOR serialization, each ITMP message is serialized according to the CBOR specification.</p>
+
+<h2>
+<a id="53-transports" class="anchor" href="#53-transports" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.3. Transports</h2>
+
+<p>ITMP assumes a transport with the following characteristics:</p>
+
+<ol>
+<li>message-based</li>
+<li>bidirectional (full-duplex)</li>
+</ol>
+
+<p>There is no required transport or set of transports for ITMP implementations (but each implementation MUST, of course, implement at least one transport). Routers SHOULD implement more than one transport, enabling components using different kinds of transports to connect in an application.</p>
+
+<h3>
+<a id="531-websocket-transport" class="anchor" href="#531-websocket-transport" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.3.1. WebSocket Transport</h3>
+
+<p>The default transport binding for ITMP is WebSocket.
+In the Basic Profile, ITMP messages are transmitted as WebSocket messages: each ITMP message is transmitted as a separate WebSocket message (not WebSocket frame). The Advanced Profile may define other modes, e.g. a <em>batched mode</em> where multiple ITMP messages are transmitted via single WebSocket message.
+The ITMP protocol SHOULD BE negotiated during the WebSocket opening handshake between Peers using the WebSocket subprotocol negotiation mechanism.</p>
+
+<p>ITMP uses the following WebSocket subprotocol identifiers for unbatched modes:</p>
+
+<ul>
+<li>"itmp.json"</li>
+<li>"itmp.cbor"</li>
+</ul>
+
+<p>With "itmp.json", <em>all</em> WebSocket messages MUST BE of type <em>text</em> (UTF8 encoded payload) and use the JSON message serialization.
+With "itmp.cbor", <em>all</em> WebSocket messages MUST BE of type <em>binary</em> and use the CBOR message serialization.
+To avoid incompatibilities merely due to naming conflicts with WebSocket subprotocol identifiers, implementers SHOULD register identifiers for additional serialization formats with the official WebSocket subprotocol registry.</p>
+
+<h3>
+<a id="532-transport-and-session-lifetime" class="anchor" href="#532-transport-and-session-lifetime" aria-hidden="true"><span class="octicon octicon-link"></span></a>5.3.2. Transport and Session Lifetime</h3>
+
+<p>ITMP implementations MAY choose to tie the lifetime of the underlying transport connection for a ITMP connection to that of a ITMP session, i.e. establish a new transport-layer connection as part of each new session establishment. They MAY equally choose to allow re-use of a transport connection, allowing subsequent ITMP sessions to be established using the same transport connection.
+The diagram below illustrates the full transport connection and session lifecycle for an implementation which uses WebSocket over TCP as the transport and allows the re-use of a transport connection.</p>
+
+<h1>
+<a id="6-messages" class="anchor" href="#6-messages" aria-hidden="true"><span class="octicon octicon-link"></span></a>6. Messages</h1>
+
+<p>All ITMP messages are a "list" with a first element "MessageType" followed by one or more message type specific elements:
+[MessageType|integer, ... one or more message type specific elements ...]</p>
+
+<p>The notation "Element|type" denotes a message element named "Element" of type "type", where "type" is one of</p>
+
+<ul>
+<li>"uri": a string URI as defined in Section 5.1.1</li>
+<li>"id": an integer ID as defined in Section 5.1.2</li>
+<li>"integer": a non-negative integer</li>
+<li>"string": a Unicode string, including the empty string</li>
+<li>"bool": a boolean value ("true" or "false") - integers MUST NOT be used instead of boolean value </li>
+<li>"dict": a dictionary (map) where keys MUST be strings, keys MUST be unique and serialization order is undefined (left to the serializer being used)</li>
+<li>"list": a list (array) where items can be again any of this enumeration</li>
+</ul>
+
+<p><em>Example</em></p>
+
+<p>A "SUBSCRIBE" message has the following format</p>
+
+<p><code>[SUBSCRIBE, Request|id, Topic|uri, Options|dict]</code></p>
+
+<p>Here is an example message conforming to the above format</p>
+
+<p><code>[32, 713845233, "com.myapp.mytopic1", {}]</code></p>
+
+<h2>
+<a id="61-extensibility" class="anchor" href="#61-extensibility" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.1. Extensibility</h2>
+
+<p>Some ITMP messages contain "Options|dict" or "Details|dict" elements. This allows for future extensibility and implementations that only provide subsets of functionality by ignoring unimplemented attributes. Keys in "Options" and "Details" MUST be of type "string" and MUST match the regular expression "[a-z][a-z0-9_]{2,}" for ITMP predefined keys. Implementations MAY use implementation-specific keys that MUST match the regular expression "<em>[a-z0-9</em>]{3,}". Attributes unknown to an implementation MUST be ignored.</p>
+
+<h2>
+<a id="62-polymorphism" class="anchor" href="#62-polymorphism" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.2. Polymorphism</h2>
+
+<p>For a given "MessageType" the expected types are uniquely defined except the arguments. Hence there are polymorphic messages in ITMP.</p>
+
+<h2>
+<a id="64-message-definitions" class="anchor" href="#64-message-definitions" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4. Message Definitions</h2>
+
+<p>ITMP defines the following messages that are explained in detail in the following sections.
+All messages are mandatory per role, i.e. in an implementation that only provides a Client with the role of Publisher MUST additionally implement sending "PUBLISH" and receiving "PUBLISHED" and "ERROR" messages.</p>
+
+<h3>
+<a id="641-session-lifecycle" class="anchor" href="#641-session-lifecycle" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.1. Session Lifecycle</h3>
+
+<p>ITMP not always uses sessions and in some implementation based on datagram transport can work in trusted environment without using sessions</p>
+
+<h4>
+<a id="6411-connect" class="anchor" href="#6411-connect" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.1.1. CONNECT</h4>
+
+<p>Sent by a Client to initiate opening of a ITMP session to a Server attaching to a Realm.</p>
+
+<p><code>[CONNECT, Realm|uri, Details|dict]</code></p>
+
+<p>in trusted environment CONNECT can be omitted, then client by default connected to empty ralm without extended features, mostly it is important to small mobile nodes without persistent connection</p>
+
+<h4>
+<a id="6412-connected" class="anchor" href="#6412-connected" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.1.2. CONNECTED</h4>
+
+<p>Sent by a Server to accept a Client. The ITMP session is now open.</p>
+
+<p><code>[CONNECTED, Session|id, Details|dict]</code></p>
+
+<h4>
+<a id="6413-abort" class="anchor" href="#6413-abort" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.1.3. ABORT</h4>
+
+<p>Sent by a Peer to abort the opening of a ITMP session. No response is expected.</p>
+
+<p><code>[ABORT, Code|integer, Reason|string, Details|dict]</code></p>
+
+<h4>
+<a id="6414-disconnect" class="anchor" href="#6414-disconnect" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.1.4. DISCONNECT</h4>
+
+<p>Sent by a Peer to close a previously opened ITMP session. Must be echo'ed by the receiving Peer.</p>
+
+<p><code>[DISCONNECT, Code|integer, Reason|string, Details|dict]</code></p>
+
+<h3>
+<a id="642-service-discovering" class="anchor" href="#642-service-discovering" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.2. Service discovering</h3>
+
+<h4>
+<a id="6421-describe" class="anchor" href="#6421-describe" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.2.1. DESCRIBE</h4>
+
+<p>Sent by peer to other peer to get peer/function/event description</p>
+
+<p><code>[DESCRIBE, Request|id, Topic|uri, Options|dict]</code></p>
+
+<h4>
+<a id="6421-description" class="anchor" href="#6421-description" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.2.1. DESCRIPTION</h4>
+
+<p>Sent by peer as answer to DESCRIBE message</p>
+
+<p><code>[DESCRIPTION, Request|id, description|list, Options|dict]</code></p>
+
+<h3>
+<a id="642-publish--subscribe" class="anchor" href="#642-publish--subscribe" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.2. Publish &amp; Subscribe</h3>
+
+<h4>
+<a id="6421-event" class="anchor" href="#6421-event" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.2.1. EVENT</h4>
+
+<p>Sent by a Publisher to a Subscriber/Broker to publish an event without acknowledge.</p>
+
+<p><code>[EVENT, Request|id, Topic|uri, Arguments, Options|dict]</code></p>
+
+<p>An event is dispatched to a Subscriber for a given "Subscription|id" only once. On the other hand, a Subscriber that holds subscriptions with different "Subscription|id"s that all match a given event will receive the event on each matching subscription.</p>
+
+<h4>
+<a id="6421-publish" class="anchor" href="#6421-publish" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.2.1. PUBLISH</h4>
+
+<p>Sent by a Publisher to a Subscriber/Broker to publish an event with acknowledge awaiting.</p>
+
+<p><code>[PUBLISH, Request|id, Topic|uri, Arguments, Options|dict]</code></p>
+
+<h4>
+<a id="6422-published" class="anchor" href="#6422-published" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.2.2. PUBLISHED</h4>
+
+<p>Acknowledge sent by a Broker to a Publisher for acknowledged publications.</p>
+
+<p><code>[PUBLISHED, Request|id, Publication|id, Options|dict]</code></p>
+
+<h4>
+<a id="6423-subscribe" class="anchor" href="#6423-subscribe" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.2.3. SUBSCRIBE</h4>
+
+<p>Subscribe request sent by a Subscriber to a Broker to subscribe to a topic.</p>
+
+<p><code>[SUBSCRIBE, Request|id, Topic|uri, Options|dict]</code></p>
+
+<h4>
+<a id="6423-subscribe-1" class="anchor" href="#6423-subscribe-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.2.3. SUBSCRIBE</h4>
+
+<p>Subscribe request sent by a Subscriber to a Broker to subscribe to a topic.</p>
+
+<p><code>[SUBSCRIBED, Request|id, SubscriptionId|id, Options|dict]</code></p>
+
+<h4>
+<a id="6425-unsubscribe" class="anchor" href="#6425-unsubscribe" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.2.5. UNSUBSCRIBE</h4>
+
+<p>Unsubscribe request sent by a Subscriber to a Broker to unsubscribe a subscription.</p>
+
+<p><code>[UNSUBSCRIBE, Request|id, SUBSCRIBED.SubscriptionId|id, Options|dict]</code>
+<code>[UNSUBSCRIBE, Request|id, Topic|uri, Options|dict]</code></p>
+
+<h4>
+<a id="6424-unsubscribed" class="anchor" href="#6424-unsubscribed" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.2.4. UNSUBSCRIBED</h4>
+
+<p>Acknowledge sent by a Broker to a Subscriber to acknowledge a unsubscription.</p>
+
+<p><code>[UNSUBSCRIBED, UNSUBSCRIBE.Request|id, Options|dict]</code></p>
+
+<h3>
+<a id="643-remote-procedure-calls" class="anchor" href="#643-remote-procedure-calls" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.3. Remote Procedure Calls</h3>
+
+<h4>
+<a id="6431-call" class="anchor" href="#6431-call" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.3.1. CALL</h4>
+
+<p>Call as originally issued by the Caller.</p>
+
+<p><code>[CALL, Request|id, Procedure|uri, Arguments, Options|dict]</code></p>
+
+<h4>
+<a id="6432-arguments" class="anchor" href="#6432-arguments" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.3.2. ARGUMENTS</h4>
+
+<p>Provide additional arguments to the call to Callee during call execution.</p>
+
+<p><code>[ARGUMENTS, CALL.Request|id, Arguments, Options|dict]</code></p>
+
+<h4>
+<a id="6432-progress" class="anchor" href="#6432-progress" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.3.2. PROGRESS</h4>
+
+<p>Result of a call progress returned to Caller during call execution.</p>
+
+<p><code>[PROGRESS, CALL.Request|id, Result, Details|dict]</code></p>
+
+<h4>
+<a id="6432-cancel" class="anchor" href="#6432-cancel" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.3.2. CANCEL</h4>
+
+<p>Cancel the previously called function.</p>
+
+<p><code>[CANCEL, CALL.Request|id, Details|dict]</code></p>
+
+<h4>
+<a id="6432-result" class="anchor" href="#6432-result" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.3.2. RESULT</h4>
+
+<p>Result of a call as returned to Caller.</p>
+
+<p><code>[RESULT, CALL.Request|id, Result, Details|dict]</code></p>
+
+<h4>
+<a id="6432-error" class="anchor" href="#6432-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.3.2. ERROR</h4>
+
+<p>Result of a call as returned to Caller if the error occur during call execution.</p>
+
+<p><code>[ERROR, CALL.Request|id, error code|integer, TextError|string, Details|dict]</code></p>
+
+<h3>
+<a id="644-list-of-all-messages-and-codes" class="anchor" href="#644-list-of-all-messages-and-codes" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.4. List of all messages and codes</h3>
+
+<pre><code>Connection
+0   [CONNECT, "fireguard",{"roles":{"pub":{}}}] opened connection
+1   [CONNECTED, 3245,{"roles":{"sub":{}}}]  confirm connection
+2   [ABORT, 503,"time out"] terminate connection
+3   [DISCONNECT, 503,"time out"]     
+Information
+4   [KEEP_ALIVE]    keep alive
+5   [ERROR, id, 503,"time out"] error notificarion 
+Description
+6   [DESCRIBE, id, "name"]  get description
+7   [DESCRIPTION, id, ["name&amp;int"]] description response
+RPC
+8   [CALL, id, "name", [1,2]]   call
+9   [RESULT, id, ["ok","result"]]   call response
+RPC Extended
+10  [ARGUMENTS, id, [1,2]]  additional arguments for call
+11  [PROGRESS, id, [2,"almost done"]]   call in progress
+12  [CANCEL, id]    call cancel
+publish
+13  [EVENT, id, "alarm", [32,"12:33"]]  event
+14  [PUBLISH, id, "alarm", [32,"12:33"]]    event with acknowledge awaiting
+15  [PUBLISHED, id] event acknowledged
+subscribe
+16  [SUBSCRIBE, id, "alarm"]    subscribe
+17  [SUBSCRIBED, id, SUBSCRIPTION.id]   subscription confirmed
+18  [UNSUBSCRIBE, id, "alarm"]
+[UNSUBSCRIBE, id, SUBSCRIPTION.id]  unsibscribe
+19  [UNSUBSCRIBED, id]   
+subscribe
+20  [ANOUNCE, id, "name",["name&amp;int"]]  announce interface or event
+21  [ACCEPTED, id,] accept announcement
+</code></pre>
+
+<h2>
+<a id="66-extension-messages" class="anchor" href="#66-extension-messages" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.6. Extension Messages</h2>
+
+<p>ITMP uses type codes from the core range [0, 19]. Implementations MAY define and use implementation specific messages with message type codes from the extension message range [20, 255]. For example, a router MAY implement router-to-router communication by using extension messages.</p>
+
+<h2>
+<a id="67-empty-options-and-details" class="anchor" href="#67-empty-options-and-details" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.7. Empty Options and Details</h2>
+
+<p>Implementations SHOULD avoid sending empty "Details" dicts.
+E.g. a "CALL" message</p>
+
+<p><code>[CALL, Request|id, Procedure|uri, Arguments, Options|dict]</code></p>
+
+<p>where " Options == {}" SHOULD be avoided, and instead</p>
+
+<p><code>[CALL, Request|id, Procedure|uri, Arguments]</code></p>
+
+<p>SHOULD be sent.</p>
+
+<h2>
+<a id="67-empty-arguments" class="anchor" href="#67-empty-arguments" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.7. Empty Arguments</h2>
+
+<p>Implementations SHOULD avoid sending empty "Arguments" lists if Options is empty.
+E.g. a "CALL" message</p>
+
+<p><code>[CALL, Request|id, Procedure|uri, Arguments]</code></p>
+
+<p>where "Arguments == []" SHOULD be avoided, and instead</p>
+
+<p><code>[CALL, Request|id, Procedure|uri]</code></p>
+
+<p>SHOULD be sent.</p>
+
+<h1>
+<a id="7-sessions" class="anchor" href="#7-sessions" aria-hidden="true"><span class="octicon octicon-link"></span></a>7. Sessions</h1>
+
+<p>The message flow between Clients and Routers for opening and closing ITMP sessions involves the following messages:</p>
+
+<ol>
+<li>"CONNECT"</li>
+<li>"CONNECTED"</li>
+<li>"ABORT"</li>
+<li>"DISCONNECT"</li>
+</ol>
+
+<h2>
+<a id="71-session-establishment" class="anchor" href="#71-session-establishment" aria-hidden="true"><span class="octicon octicon-link"></span></a>7.1. Session Establishment</h2>
+
+<h3>
+<a id="711-connect" class="anchor" href="#711-connect" aria-hidden="true"><span class="octicon octicon-link"></span></a>7.1.1. CONNECT</h3>
+
+<p>After the underlying transport has been established, the opening of a ITMP session is initiated by the Client sending a "CONNECT" message to the Router</p>
+
+<p><code>[CONNECT, Realm|uri, Details|dict]</code></p>
+
+<p>where</p>
+
+<p>"Realm" is a string identifying the realm this session should attach to</p>
+
+<p>"Details" is a dictionary that allows to provide additional opening information (see below).
+The "CONNECT" message MUST be the very first message sent by the Client after the transport has been established.
+In the ITMP Basic Profile without session authentication the Router will reply with a "CONNECTED" or "ABORT" message.
+A ITMP session starts its lifetime when the Router has sent a "CONNECTED" message to the Client, and ends when the underlying transport closes or when the session is closed explicitly by either peer sending the "DISCONNECT" message (see below).</p>
+
+<p>It is a protocol error to receive a second "CONNECT" message during the lifetime of the session and the Peer must fail the session if that happens.</p>
+
+<h4>
+<a id="7111-client-role-and-feature-announcement" class="anchor" href="#7111-client-role-and-feature-announcement" aria-hidden="true"><span class="octicon octicon-link"></span></a>7.1.1.1. Client: Role and Feature Announcement</h4>
+
+<p>ITMP uses <em>Role &amp; Feature announcement</em> instead of <em>protocol versioning</em> to allow implementations only supporting subsets of functionality future extensibility
+A Client must announce the roles it supports via "Connect.Details.roles|dict", with a key mapping to a "Connect.Details.roles.|dict" where "" can be:</p>
+
+<ul>
+<li>"publisher"</li>
+<li>"subscriber"</li>
+<li>"caller"</li>
+<li>"callee"</li>
+</ul>
+
+<p>A Client can support any combination of the above roles but must support at least one role.
+The "|dict" is a dictionary describing features supported by the peer for that role.
+This MUST be empty for ITMP Basic Profile implementations, and MUST be used by implementations implementing parts of the Advanced Profile to list the specific set of features they support.</p>
+
+<p><em>Example: A Client that implements the Publisher and Subscriber roles of the ITMP Basic Profile.</em></p>
+
+<pre><code>[0, "somerealm", {
+"roles": {
+"publisher": {},
+"subscriber": {}
+}
+}]
+</code></pre>
+
+<h3>
+<a id="712-connected" class="anchor" href="#712-connected" aria-hidden="true"><span class="octicon octicon-link"></span></a>7.1.2. CONNECTED</h3>
+
+<p>A Router completes the opening of a ITMP session by sending a "CONNECTED" reply message to the Client.</p>
+
+<p><code>[CONNECTED, Session|id, Details|dict]</code></p>
+
+<p>where
+"Session" MUST be a randomly generated ID specific to the ITMP session. This applies for the lifetime of the session.
+"Details" is a dictionary that allows to provide additional information regarding the open session (see below).
+In the ITMP Basic Profile without session authentication, a "CONNECTED" message MUST be the first message sent by the Router, directly in response to a "CONNECT" message received from the Client. Extensions in the Advanced Profile MAY include intermediate steps and messages for authentication.
+Note. The behavior if a requested "Realm" does not presently exist is router-specific. A router may e.g. automatically create the realm, or deny the establishment of the session with a "ABORT" reply message.</p>
+
+<h4>
+<a id="7121-router-role-and-feature-announcement" class="anchor" href="#7121-router-role-and-feature-announcement" aria-hidden="true"><span class="octicon octicon-link"></span></a>7.1.2.1. Router: Role and Feature Announcement</h4>
+
+<p>Similar to a Client announcing Roles and Features supported in the "CONNECT" message, a Router announces its supported Roles and Features in the "CONNECTED" message.
+A Router MUST announce the roles it supports via "Connected.Details.roles|dict", with a key mapping to a "Connected.Details.roles.|dict" where "" can be:</p>
+
+<ul>
+<li>"broker"</li>
+<li>"dealer"</li>
+<li>"publisher"</li>
+<li>"subscriber"</li>
+<li>"caller"</li>
+<li>"callee"</li>
+</ul>
+
+<p>A Router must support at least one role, and MAY support all roles.
+The "|dict" is a dictionary describing features supported by the peer for that role. With ITMP Basic Profile implementations, this MUST be empty, but MUST be used by implementations implementing parts of the Advanced Profile to list the specific set of features they support</p>
+
+<p><em>Example: A Router implementing the Broker role of the ITMP Basic Profile.</em></p>
+
+<pre><code>[2, 9129137332, {
+"roles": {
+"broker": {}
+}
+}]
+</code></pre>
+
+<h3>
+<a id="713-abort" class="anchor" href="#713-abort" aria-hidden="true"><span class="octicon octicon-link"></span></a>7.1.3. ABORT</h3>
+
+<p>Both the Router and the Client may abort the opening of a ITMP session by sending an "ABORT" message.</p>
+
+<p><code>[ABORT, Code|integer, Reason|string, Details|dict]</code></p>
+
+<p>where</p>
+
+<p>"Code" MUST be an integer code of error.
+"Details" MUST be a dictionary that allows to provide additional, optional closing information (see below).
+No response to an "ABORT" message is expected.</p>
+
+<p><code>[3, 407,"The realm does not exist."]</code></p>
+
+<h2>
+<a id="72-session-closing" class="anchor" href="#72-session-closing" aria-hidden="true"><span class="octicon octicon-link"></span></a>7.2. Session Closing</h2>
+
+<p>A ITMP session starts its lifetime with the Router sending a "CONNECTED" message to the Client and ends when the underlying transport disappears or when the ITMP session is closed explicitly by a "DISCONNECT" message sent by one Peer and a "DISCONNECT" message sent from the other Peer in response.</p>
+
+<p><code>[DISCONNECT, Code|integer, Reason|string, Details|dict]</code></p>
+
+<p>where</p>
+
+<p>"Code" MUST be an integer code of error.</p>
+
+<p>"Details" MUST be a dictionary that allows to provide additional, optional closing information (see below).</p>
+
+<p><em>Example</em>. One Peer initiates closing</p>
+
+<p><code>[6, 503, "The host is shutting down now."]</code></p>
+
+<p>and the other peer replies</p>
+
+<p><code>[6, 200, "connection closed"]</code></p>
+
+<p><em>Example</em>. One Peer initiates closing</p>
+
+<p><code>[6, 304, " close realm"]</code></p>
+
+<p>and the other peer replies</p>
+
+<p><code>[6, 200, "connection closed"]</code></p>
+
+<h3>
+<a id="721-difference-between-abort-and-disconnect" class="anchor" href="#721-difference-between-abort-and-disconnect" aria-hidden="true"><span class="octicon octicon-link"></span></a>7.2.1. Difference between ABORT and DISCONNECT</h3>
+
+<p>The differences between "ABORT" and "DISCONNECT" messages are:</p>
+
+<ol>
+<li>"ABORT" gets sent only <em>before</em> a Session is established, while "DISCONNECT" is sent only <em>after</em> a Session is already established.</li>
+<li>"ABORT" is never replied to by a Peer, whereas "DISCONNECT" must be replied to by the receiving Peer
+Though "ABORT" and "DISCONNECT" are structurally identical, using different message types serves to reduce overloaded meaning of messages and simplify message handling code.</li>
+</ol>
+
+<h1>
+<a id="8-agent-identification" class="anchor" href="#8-agent-identification" aria-hidden="true"><span class="octicon octicon-link"></span></a>8. Agent Identification</h1>
+
+<p>When a software agent operates in a network protocol, it often identifies itself, its application type, operating system, software vendor, or software revision, by submitting a characteristic identification string to its operating peer.
+Similar to what browsers do with the "User-Agent" HTTP header, both the "CONNECT" and the "CONNECTED" message MAY disclose the ITMP implementation in use to its peer:</p>
+
+<p>CONNECT.Details.agent|string</p>
+
+<p>and</p>
+
+<p>CONNECTED.Details.agent|string</p>
+
+<p><em>Example: A Client "CONNECT" message.</em></p>
+
+<pre><code>[1, "somerealm", {
+"agent": "itmpJS-0.1.14",
+"roles": {
+"subscriber": {},
+"publisher": {}
+}
+}]
+</code></pre>
+
+<p><em>Example: A Router "CONNECTED" message.</em></p>
+
+<pre><code>[2, 9129137332, {
+"agent": "itmp.io-0.1.11",
+"roles": {
+"broker": {}
+}
+}]
+</code></pre>
+
+<h1>
+<a id="9-publish-and-subscribe" class="anchor" href="#9-publish-and-subscribe" aria-hidden="true"><span class="octicon octicon-link"></span></a>9. Publish and Subscribe</h1>
+
+<p>All of the following features for Publish &amp; Subscribe are mandatory for ITMP Basic Profile implementations supporting the respective roles, i.e. <em>Publisher</em>, <em>Subscriber</em>.</p>
+
+<h2>
+<a id="91-subscribing-and-unsubscribing" class="anchor" href="#91-subscribing-and-unsubscribing" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1. Subscribing and Unsubscribing</h2>
+
+<p>The message flow between Clients implementing the role of Subscriber and Routers implementing the role of Broker for subscribing and unsubscribing involves the following messages:</p>
+
+<ol>
+<li>"SUBSCRIBE"</li>
+<li>"SUBSCRIBED"</li>
+<li>"UNSUBSCRIBE"</li>
+<li>"UNSUBSCRIBED"</li>
+<li>"ERROR"</li>
+</ol>
+
+<p>A Subscriber may subscribe to zero, one or more topics, and a Publisher publishes to topics without knowledge of subscribers.
+Upon subscribing to a topic via the "SUBSCRIBE" message, a Subscriber will receive any future events published to the respective topic by Publishers, and will receive those events asynchronously.
+A subscription lasts for the duration of a session, unless a Subscriber opts out from a previously established subscription via the "UNSUBSCRIBE" message.
+A Subscriber may have more than one event handler attached to the same subscription. This can be implemented in different ways: a) a Subscriber can recognize itself that it is already subscribed and just attach another handler to the subscription for incoming events, b) or it can send a new "SUBSCRIBE" message to broker (as it would be first) and upon receiving a "SUBSCRIBED.Subscription|id" it already knows about, attach the handler to the existing subscription</p>
+
+<h3>
+<a id="911-subscribe" class="anchor" href="#911-subscribe" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1.1. SUBSCRIBE</h3>
+
+<p>A Subscriber communicates its interest in a topic to a Broker by sending a "SUBSCRIBE" message:</p>
+
+<p><code>[SUBSCRIBE, Request|id, Topic|uri, Options|dict]</code></p>
+
+<p>where</p>
+
+<p>"Request" MUST be a random, ephemeral ID chosen by the Subscriber and used to correlate the Broker's response with the request.</p>
+
+<p>"Options" MUST be a dictionary that allows to provide additional subscription request details in a extensible way. This is described further below.</p>
+
+<p>"Topic" is the topic the Subscriber wants to subscribe to and MUST be an URI.</p>
+
+<p><em>Example</em></p>
+
+<p><code>[32, 713845233, "com.myapp.mytopic1", {}]</code></p>
+
+<p>A Broker, receiving a "SUBSCRIBE" message, can fullfill or reject the subscription, so it answers with "SUBSCRIBED" or "ERROR" messages.</p>
+
+<h3>
+<a id="912-subscribed" class="anchor" href="#912-subscribed" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1.2. SUBSCRIBED</h3>
+
+<p>If the Broker is able to fulfill and allow the subscription, it answers by sending a "SUBSCRIBED" message to the Subscriber</p>
+
+<p><code>[SUBSCRIBED, SUBSCRIBE.Request|id, Subscription|id]</code></p>
+
+<p>where</p>
+
+<p>"SUBSCRIBE.Request" MUST be the ID from the original request.</p>
+
+<p>"Subscription" MUST be an ID chosen by the Broker for the subscription.</p>
+
+<p><em>Example</em></p>
+
+<p><code>[33, 713845233, 5512315355]</code></p>
+
+<p>Note. The "Subscription" ID chosen by the broker need not be unique to the subscription of a single Subscriber, but may be assigned to the "Topic", or the combination of the "Topic" and some or all "Options", such as the topic pattern matching method to be used. Then this ID may be sent to all Subscribers for the "Topic" or "Topic" / "Options" combination. This allows the Broker to serialize an event to be delivered only once for all actual receivers of the event.
+In case of receiving a "SUBSCRIBE" message from the same Subscriber and to already subscribed topic, Broker should answer with "SUBSCRIBED" message, containing the existing "Subscription|id".</p>
+
+<h3>
+<a id="913-subscribe-error" class="anchor" href="#913-subscribe-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1.3. Subscribe ERROR</h3>
+
+<p>When the request for subscription cannot be fulfilled by the Broker, the Broker sends back an "ERROR" message to the Subscriber</p>
+
+<p><code>[ERROR, SUBSCRIBE.Request|id, Code|integer, Description|string, Details|dict]</code></p>
+
+<p>where</p>
+
+<p>"SUBSCRIBE.Request" MUST be the ID from the original request.</p>
+
+<p>"Code" MUST be an code that gives the error of why the request could not be fulfilled.</p>
+
+<p>"Description" MUST be an string that gives the error of why the request could not be fulfilled.</p>
+
+<p><em>Example</em></p>
+
+<p><code>[8, 713845233, 401, " not authorized"]</code></p>
+
+<h3>
+<a id="914-unsubscribe" class="anchor" href="#914-unsubscribe" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1.4. UNSUBSCRIBE</h3>
+
+<p>When a Subscriber is no longer interested in receiving events for a subscription it sends an "UNSUBSCRIBE" message</p>
+
+<p><code>[UNSUBSCRIBE, Request|id, SUBSCRIBED.Subscription|id]</code></p>
+
+<p>where</p>
+
+<p>"Request" MUST be a random, ephemeral ID chosen by the Subscriber and used to correlate the Broker's response with the request.</p>
+
+<p>"SUBSCRIBED.Subscription" MUST be the ID for the subscription to unsubscribe from, originally handed out by the Broker to the Subscriber.</p>
+
+<p><em>Example</em></p>
+
+<p><code>[34, 85346237, 5512315355]</code></p>
+
+<h3>
+<a id="915-unsubscribed" class="anchor" href="#915-unsubscribed" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1.5. UNSUBSCRIBED</h3>
+
+<p>Upon successful unsubscription, the Broker sends an "UNSUBSCRIBED" message to the Subscriber</p>
+
+<p><code>[UNSUBSCRIBED, UNSUBSCRIBE.Request|id]</code></p>
+
+<p>where</p>
+
+<p>"UNSUBSCRIBE.Request" MUST be the ID from the original request.</p>
+
+<p><em>Example</em></p>
+
+<p><code>[35, 85346237]</code></p>
+
+<h3>
+<a id="916-unsubscribe-error" class="anchor" href="#916-unsubscribe-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1.6. Unsubscribe ERROR</h3>
+
+<p>When the request fails, the Broker sends an "ERROR"</p>
+
+<p><code>[ERROR, UNSUBSCRIBE.Request|id, Code|integer, Description|string, Details|dict]</code></p>
+
+<p>where</p>
+
+<p>"UNSUBSCRIBE.Request" MUST be the ID from the original request.</p>
+
+<p>"Code" MUST be an code that gives the error of why the request could not be fulfilled.</p>
+
+<p>"Description" MUST be an string that gives the error of why the request could not be fulfilled.</p>
+
+<p><em>Example</em></p>
+
+<p><code>[8, 85346237, 404, "No such subscription"]</code></p>
+
+<h2>
+<a id="92-publishing-and-events" class="anchor" href="#92-publishing-and-events" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.2. Publishing and Events</h2>
+
+<p>The message flow between Publishers, a Broker and Subscribers for publishing to topics and dispatching events involves the following messages:</p>
+
+<ol>
+<li>"EVENT"</li>
+<li>"PUBLISH"</li>
+<li>"PUBLISHED"</li>
+<li>"ERROR"</li>
+</ol>
+
+<h3>
+<a id="921-event" class="anchor" href="#921-event" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.2.1. EVENT</h3>
+
+<p>When a Publisher requests to publish an event to some topic, it sends a "EVENT" message to a Broker:</p>
+
+<p><code>[EVENT, Request|id, Topic|uri, Arguments, Options|dict]</code></p>
+
+<p>where</p>
+
+<p>"Request" is a random, ephemeral ID chosen by the Publisher and used to correlate the Broker's response with the request.</p>
+
+<p>"Topic" is the topic published to.</p>
+
+<p>"Arguments" is a list or dictionary of application-level event payload elements. The list or dictionary may be of zero length.</p>
+
+<p>"Options" is a dictionary that allows to provide additional publication request details in an extensible way. This is described further below.</p>
+
+<p>That publications are unacknowledged, and the Broker will not respond, whether the publication was successful indeed or not. </p>
+
+<p><em>Example</em></p>
+
+<p><code>[16, 239714735, "com.myapp.mytopic1"]</code></p>
+
+<p><em>Example</em></p>
+
+<p><code>[16, 239714735, "com.myapp.mytopic1", ["Hello, world!"]]</code></p>
+
+<p><em>Example</em></p>
+
+<p><code>[16, 239714735, "com.myapp.mytopic1", {"color": "orange", "sizes": [23, 42, 7]}]</code></p>
+
+<h3>
+<a id="921-publish" class="anchor" href="#921-publish" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.2.1. PUBLISH</h3>
+
+<p>When a Publisher requests to publish an event to some topic, it sends a "PUBLISH" message to a Broker:</p>
+
+<p><code>[PUBLISH, Request|id, Topic|uri, Arguments, Options|dict]</code></p>
+
+<p>where</p>
+
+<p>"Request" is a random, ephemeral ID chosen by the Publisher and used to correlate the Broker's response with the request.</p>
+
+<p>"Topic" is the topic published to.</p>
+
+<p>"Arguments" is a list or dictionary of application-level event payload elements. The list or dictionary may be of zero length.</p>
+
+<p>"Options" is a dictionary that allows to provide additional publication request details in an extensible way. This is described further below.</p>
+
+<p>If the Broker is able to fulfill and allowing the publication, the Broker will send the event to all current Subscribers of the topic of the published event.
+Publications are acknowledged, and the Broker will respond, depends the publication was successful indeed or not. </p>
+
+<p><em>Example</em></p>
+
+<p><code>[16, 239714735, "com.myapp.mytopic1"]</code></p>
+
+<p><em>Example</em></p>
+
+<p><code>[16, 239714735, "com.myapp.mytopic1", ["Hello, world!"]]</code></p>
+
+<p><em>Example</em></p>
+
+<p><code>[16, 239714735, "com.myapp.mytopic1", {"color": "orange", "sizes": [23, 42, 7]}]</code></p>
+
+<h3>
+<a id="922-published" class="anchor" href="#922-published" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.2.2. PUBLISHED</h3>
+
+<p>If the Broker is able to fulfill and allowing the publication of PUBLISH message, the Broker replies by sending a "PUBLISHED" message to the Publisher:</p>
+
+<p><code>[PUBLISHED, PUBLISH.Request|id, Publication|id]</code></p>
+
+<p>where</p>
+
+<p>"PUBLISH.Request" is the ID from the original publication request.</p>
+
+<p>"Publication" is a ID chosen by the Broker for the publication.</p>
+
+<p><em>Example</em></p>
+
+<p><code>[17, 239714735, 4429313566]</code></p>
+
+<h3>
+<a id="923-publish-error" class="anchor" href="#923-publish-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.2.3. Publish ERROR</h3>
+
+<p>When the PUBLISH request for publication cannot be fulfilled by the Broker, the Broker sends back an "ERROR" message to the Publisher</p>
+
+<p><code>[ERROR, PUBLISH.Request|id, Code|integer, Description|string, Details|dict]</code></p>
+
+<p>where</p>
+
+<p>"PUBLISH.Request" is the ID from the original publication request.</p>
+
+<p>"Code" is an number that gives the error of why the request could not be fulfilled.</p>
+
+<p><em>Example</em></p>
+
+<p><code>[8, 239714735, 401, " not authorized"]</code></p>
+
+<h1>
+<a id="10-remote-procedure-calls" class="anchor" href="#10-remote-procedure-calls" aria-hidden="true"><span class="octicon octicon-link"></span></a>10. Remote Procedure Calls</h1>
+
+<p>All of the following features for Remote Procedure Calls are mandatory for ITMP Basic Profile implementations supporting the respective roles.</p>
+
+<h2>
+<a id="102-calling" class="anchor" href="#102-calling" aria-hidden="true"><span class="octicon octicon-link"></span></a>10.2. Calling</h2>
+
+<p>The message flow between Callers, a Dealer and Callees for calling procedures and invoking endpoints involves the following messages:</p>
+
+<ol>
+<li>"CALL"</li>
+<li>"ARGUMENTS"</li>
+<li>"RESULT"</li>
+<li>"ERROR"</li>
+</ol>
+
+<p>The execution of remote procedure calls is asynchronous, and there may be more than one call outstanding. A call is called outstanding (from the point of view of the Caller), when a (final) result or error has not yet been received by the Caller.</p>
+
+<h3>
+<a id="1021-call" class="anchor" href="#1021-call" aria-hidden="true"><span class="octicon octicon-link"></span></a>10.2.1. CALL</h3>
+
+<p>When a Caller wishes to call a remote procedure, it sends a "CALL" message to a Dealer:</p>
+
+<p><code>[CALL, Request|id, Procedure|uri, Arguments, Options|dict]</code></p>
+
+<p>where</p>
+
+<p>"Request" is a random, ephemeral ID chosen by the Caller and used to correlate the Dealer's response with the request.</p>
+
+<p>"Options" is a dictionary that allows to provide additional call request details in an extensible way. This is described further below.</p>
+
+<p>"Procedure" is the URI of the procedure to be called.</p>
+
+<p>"Arguments" is a list of positional call arguments (each of arbitrary type) or dictionary of keyword call arguments. The Arguments may be empty or omitted. </p>
+
+<p><em>Example</em></p>
+
+<p><code>[48, 7814135, "com.myapp.ping"]</code></p>
+
+<p><em>Example</em></p>
+
+<p><code>[48, 7814135, "com.myapp.echo", ["Hello, world!"]]</code></p>
+
+<p><em>Example</em></p>
+
+<p><code>[48, 7814135, "com.myapp.add2", [23, 7]]</code></p>
+
+<p><em>Example</em></p>
+
+<p><code>[48, 7814135, "com.myapp.user.new", {"firstname": "John", "surname": "Doe"}]</code></p>
+
+<h3>
+<a id="1023-result" class="anchor" href="#1023-result" aria-hidden="true"><span class="octicon octicon-link"></span></a>10.2.3. RESULT</h3>
+
+<p>If the Callee is able to successfully process and finish the execution of the call, it answers by sending a "RESULT" message to the Dealer:</p>
+
+<p><code>[RESULT, CALL.Request|id, Arguments, Options|dict]</code></p>
+
+<p>where</p>
+
+<p>"CALL.Request" is the ID from the original invocation request.</p>
+
+<p>"Arguments" is a list of positional result elements (each of arbitrary type) or dictionary of keyword result elements (each of arbitrary type). The Arguments may be empty or even omitted.</p>
+
+<p>"Options"is a dictionary that allows to provide additional options.</p>
+
+<p><em>Example</em></p>
+
+<p><code>[70, 6131533]</code></p>
+
+<p><em>Example</em></p>
+
+<p><code>[70, 6131533, ["Hello, world!"]]</code></p>
+
+<p><em>Example</em></p>
+
+<p><code>[70, 6131533, [30]]</code></p>
+
+<p><em>Example</em></p>
+
+<p><code>[70, 6131533, {"userid": 123, "karma": 10}]</code></p>
+
+<h3>
+<a id="1025-error" class="anchor" href="#1025-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>10.2.5. ERROR</h3>
+
+<p>If the Callee is unable to process or finish the execution of the call, or the application code implementing the procedure raises an exception or otherwise runs into an error, the Callee sends an "ERROR" message to the Dealer:</p>
+
+<p><code>[ERROR, CALL.Request|id, Code|integer, Description|string, Details|dict]</code></p>
+
+<p>where</p>
+
+<p>"CALL.Request" is the ID from the original "CALL" request previously sent by the Dealer to the Callee.</p>
+
+<p>"Details" is a dictionary with additional error details.</p>
+
+<p>"Code" is an integer that identifies the error of why the request could not be fulfilled.</p>
+
+<p><em>Example</em></p>
+
+<p><code>[8, 6131533, 504, "time out", {"severity": 3}]</code></p>
+
+<h1>
+<a id="11-error-codes" class="anchor" href="#11-error-codes" aria-hidden="true"><span class="octicon octicon-link"></span></a>11. Error codes</h1>
+
+<p>ITMP pre-defines the following error codes. ITMP peers MUST use only the defined error messages.</p>
+
+<h3>
+<a id="1111-400-bad-request" class="anchor" href="#1111-400-bad-request" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.1. 400 Bad request</h3>
+
+<p>When a Peer provides an incorrect URI for any URI-based attribute of a ITMP message (e.g. realm, topic), then the other Peer MUST respond with an "ERROR" message and give the following 400:
+11.1.2. Interaction
+Peer provided an incorrect URI for any URI-based attribute of ITMP message, such as realm, topic or procedure
+400 Bad Request.
+A Dealer could not perform a call, since no procedure is currently registered under the given URI.
+404 Not Found
+A Broker could not perform an unsubscribe, since the given subscription is not active.
+404 Not Found 
+A call failed since the given argument types or values are not acceptable to the called procedure. In this case the Callee may throw this error. Alternatively a Router may throw this error if it performed <em>payload validation</em> of a call, call result, call error or publish, and the payload did not conform to the requirements.
+512 Bag argument</p>
+
+<h3>
+<a id="1113-session-close" class="anchor" href="#1113-session-close" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.3. Session Close</h3>
+
+<p>The Peer is shutting down completely - used as a "DISCONNECT" (or "ABORT") reason.
+513 system shutdown
+The Peer want to leave the realm - used as a "DISCONNECT" reason.
+514 close realm
+A Peer acknowledges ending of a session - used as a "DISCONNECT" reply reason.
+202 goodbye and out</p>
+
+<h3>
+<a id="1114-authorization" class="anchor" href="#1114-authorization" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.4. Authorization</h3>
+
+<p>A join, call, register, publish or subscribe failed, since the Peer is not authorized to perform the operation.
+401 not authorized
+A Dealer or Broker could not determine if the Peer is authorized to perform a join, call, register, publish or subscribe, since the authorization operation <em>itself</em> failed. E.g. a custom authorizer did run into an error.
+401 authorization failed
+Peer wanted to join a non-existing realm (and the Router did not allow to auto-create the realm).
+404 no such realm</p>
+
+<p>A <em>Peer</em> requested an interaction with an option that was disallowed by the <em>Router</em>
+405 option not allowed
+A <em>Dealer</em> could not perform a call, since a procedure with the given URI is registered, but <em>Callee Black- and Whitelisting</em> and/or <em>Caller Exclusion</em> lead to the exclusion of (any) <em>Callee</em> providing the procedure.
+403 no eligible callee</p>
+
+<h1>
+<a id="12-ordering-guarantees" class="anchor" href="#12-ordering-guarantees" aria-hidden="true"><span class="octicon octicon-link"></span></a>12. Ordering Guarantees</h1>
+
+<p>All ITMP implementations, in particular Routers MUST support the following ordering guarantees.
+A ITMP Advanced Profile may provide applications options to relax ordering guarantees, in particular with distributed calls.</p>
+
+<h2>
+<a id="121-publish--subscribe-ordering" class="anchor" href="#121-publish--subscribe-ordering" aria-hidden="true"><span class="octicon octicon-link"></span></a>12.1. Publish &amp; Subscribe Ordering</h2>
+
+<p>Regarding <em>Publish &amp; Subscribe</em>, the ordering guarantees are as follows:
+If <em>Subscriber A</em> is subscribed to both <em>Topic 1</em> and <em>Topic 2</em>, and <em>Publisher B</em> first publishes an <em>Event 1</em> to <em>Topic 1</em> and then an <em>Event 2</em> to <em>Topic 2</em>, then <em>Subscriber A</em> will first receive <em>Event 1</em> and then <em>Event 2</em>. This also holds if <em>Topic 1</em> and <em>Topic 2</em> are identical.
+In other words, ITMP guarantees ordering of events between any given <em>pair</em> of Publisher and Subscriber.
+Further, if <em>Subscriber A</em> subscribes to <em>Topic 1</em>, the "SUBSCRIBED" message will be sent by the <em>Broker</em> to <em>Subscriber A</em> before any "EVENT" message for <em>Topic 1</em>.
+There is no guarantee regarding the order of return for multiple subsequent subscribe requests. A subscribe request might require the <em>Broker</em> to do a time-consuming lookup in some database, whereas another subscribe request second might be permissible immediately.</p>
+
+<h2>
+<a id="122-remote-procedure-call-ordering" class="anchor" href="#122-remote-procedure-call-ordering" aria-hidden="true"><span class="octicon octicon-link"></span></a>12.2. Remote Procedure Call Ordering</h2>
+
+<p>Regarding <em>Remote Procedure Calls</em>, the ordering guarantees are as follows:
+If <em>Callee A</em> has registered endpoints for both <em>Procedure 1</em> and <em>Procedure 2</em>, and <em>Caller B</em> first issues a <em>Call 1</em> to <em>Procedure 1</em> and then a <em>Call 2</em> to <em>Procedure 2</em>, and both calls are routed to <em>Callee A</em>, then <em>Callee A</em> will first receive an invocation corresponding to <em>Call 1</em> and then <em>Call 2</em>. This also holds if <em>Procedure 1</em> and <em>Procedure 2</em> are identical.
+In other words, ITMP guarantees ordering of invocations between any given <em>pair</em> of Caller and Callee.
+There are no guarantees on the order of call results and errors in relation to <em>different</em> calls, since the execution of calls upon different invocations of endpoints in Callees are running independently. A first call might require an expensive, long-running computation, whereas a second, subsequent call might finish immediately.</p>
+
+<h1>
+<a id="13-security-model" class="anchor" href="#13-security-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>13. Security Model</h1>
+
+<p>The following discusses the security model for the Basic Profile. Any changes or extensions to this for the Advanced Profile are discussed further on as part of the Advanced Profile definition.</p>
+
+<h2>
+<a id="131-transport-encryption-and-integrity" class="anchor" href="#131-transport-encryption-and-integrity" aria-hidden="true"><span class="octicon octicon-link"></span></a>13.1. Transport Encryption and Integrity</h2>
+
+<p>ITMP transports may provide (optional) transport-level encryption and integrity verification. If so, encryption and integrity is point-to- point: between a Client and the Router it is connected to.
+Transport-level encryption and integrity is solely at the transport- level and transparent to ITMP. ITMP itself deliberately does not specify any kind of transport-level encryption.
+Implementations that offer TCP based transport such as ITMP-over- WebSocket or ITMP-over-RawSocket SHOULD implement Transport Layer Security (TLS).
+ITMP deployments are encouraged to stick to a TLS-only policy with the TLS code and setup being hardened.
+Further, when a Client connects to a Router over a local-only transport such as Unix domain sockets, the integrity of the data transmitted is implicit (the OS kernel is trusted), and the privacy of the data transmitted can be assured using file system permissions (no one can tap a Unix domain socket without appropriate permissions or being root).</p>
+
+<h2>
+<a id="132-router-authentication" class="anchor" href="#132-router-authentication" aria-hidden="true"><span class="octicon octicon-link"></span></a>13.2. Router Authentication</h2>
+
+<p>To authenticate Routers to Clients, deployments MUST run TLS and Clients MUST verify the Router server certificate presented. ITMP itself does not provide mechanisms to authenticate a Router (only a Client).
+The verification of the Router server certificate can happen</p>
+
+<ol>
+<li>against a certificate trust database that comes with the Clients operating system</li>
+<li>against an issuing certificate/key hard-wired into the Client</li>
+<li>by using new mechanisms like DNS-based Authentication of Named Enitities (DNSSEC)/TLSA</li>
+</ol>
+
+<p>Further, when a Client connects to a Router over a local-only transport such as Unix domain sockets, the file system permissions can be used to create implicit trust. E.g. if only the OS user under which the Router runs has the permission to create a Unix domain socket under a specific path, Clients connecting to that path can trust in the router authenticity.</p>
+
+<h2>
+<a id="133-client-authentication" class="anchor" href="#133-client-authentication" aria-hidden="true"><span class="octicon octicon-link"></span></a>13.3. Client Authentication</h2>
+
+<p>Authentication of a Client to a Router at the ITMP level is not part of the basic profile.
+When running over TLS, a Router MAY authenticate a Client at the transport level by doing a <em>client certificate based authentication</em>.</p>
+
+<h3>
+<a id="1331-routers-are-trusted" class="anchor" href="#1331-routers-are-trusted" aria-hidden="true"><span class="octicon octicon-link"></span></a>13.3.1. Routers are trusted</h3>
+
+<p>Routers are <em>trusted</em> by Clients.
+In particular, Routers can read (and modify) any application payload transmitted in events, calls, call results and call errors.
+Hence, Routers do not provide confidentiality with respect to application payload, and also do not provide authenticity or integrity of application payloads that could be verified by a receiving Client.
+Routers need to read the application payloads in cases of automatic conversion between different serialization formats.
+Further, Routers are trusted to <em>actually perform</em> routing as specified. E.g. a Client that publishes an event has to trust a Router that the event is actually dispatched to all (eligible) Subscribers by the Router.
+A rogue Router might deny normal routing operation without a Client taking notice.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Itmp maintained by <a href="https://github.com/neolp">neolp</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
