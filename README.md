@@ -1,2 +1,2 @@
 # itmp
-Internet of Thinks Messaging Protocol ITMP
+Internet of Things Messaging Protocol (ITMP)
