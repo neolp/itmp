@@ -215,14 +215,20 @@ All messages are mandatory per role, i.e. in an implementation that only provide
 ITMP not always uses sessions and in some implementation based on datagram transport can work in trusted environment without using sessions
 #### 6.4.1.1. CONNECT
 Sent by a Client to initiate opening of a ITMP session to a Server attaching to a Realm.
-'[CONNECT, Realm|uri, Details|dict]
+
+`[CONNECT, Realm|uri, Details|dict]`
+
 in trusted environment CONNECT can be omitted, then client by default connected to empty ralm without extended features, mostly it is important to small mobile nodes without persistent connection
 #### 6.4.1.2. CONNECTED
 Sent by a Server to accept a Client. The ITMP session is now open.
+
 `[CONNECTED, Session|id, Details|dict]`
+
 #### 6.4.1.3. ABORT
 Sent by a Peer to abort the opening of a ITMP session. No response is expected.
+
 `[ABORT, Code|integer, Reason|string, Details|dict]`
+
 #### 6.4.1.4. DISCONNECT
 Sent by a Peer to close a previously opened ITMP session. Must be echo'ed by the receiving Peer.
 `[DISCONNECT, Code|integer, Reason|string, Details|dict]`
