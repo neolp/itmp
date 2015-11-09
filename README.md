@@ -87,9 +87,11 @@ For each building block, ITMP only assumes a defined set of requirements, which 
 ## 5.1. Identifiers
 ### 5.1.1. URIs
 ITMP needs to identify the following persistent resources:
+
 1. Topics
 2. Procedures
 3. Errors
+
 These are identified in ITMP using Uniform Resource Identifiers (URIs) [RFC3986] that MUST be Unicode strings.
 When using JSON as ITMP serialization format, URIs (as other strings) are transmitted in UTF-8 [RFC3629] encoding.
 _Examples_
@@ -126,10 +128,12 @@ pattern = re.compile(r"^(([0-9a-z_]+\.)|\.)*([0-9a-z_]+)?$")
 Following the suggested regular expression will make URI components valid identifiers in most languages (modulo URIs starting with a digit and language keywords) and the use of lower-case only will make those identifiers unique in languages that have case-insensitive identifiers. Following this suggestion can allow implementations to map topics, procedures and errors to the language environment in a completely transparent way.
 ### 5.1.2. IDs
 ITMP needs to identify the following ephemeral entities each in the scope noted:
+
 1. Sessions (_global scope_)
 2. Publications (_global scope_)
 3. Subscriptions (_router scope_)
 5. Requests (_session scope_)
+
 These are identified in ITMP using IDs that are integers between (inclusive) *0* and *2^53* (9007199254740992):
 IDs in the _global scope_ MUST be drawn _randomly_ from a _uniform distribution_ over the complete range [0, 2^53]
 IDs in the _router scope_ can be chosen freely by the specific router implementation
@@ -137,142 +141,196 @@ IDs in the _session scope_ SHOULD be incremented by 1 beginning with 1 (for each
 The reason to choose the specific upper bound is that 2^53 is the largest integer such that this integer and _all_ (positive) smaller integers can be represented exactly in IEEE-754 doubles. Some languages (e.g. JavaScript) use doubles as their sole number type. Most languages do have signed and unsigned 64-bit integer types that both can hold any value from the specified range.
 The following is a complete list of usage of IDs in the three categories for all ITMP messages. For a full definition of these see Section 6.
 #### 5.1.2.1. Global Scope IDs
-"CONNECTED.Session"
-"PUBLISHED.Publication"
+
+* "CONNECTED.Session"
+* "PUBLISHED.Publication"
+
 #### 5.1.2.2. Router Scope IDs
-"SUBSCRIBED.Subscription"
+
+* "SUBSCRIBED.Subscription"
+
 #### 5.1.2.3. Session Scope IDs
-"PUBLISH.Request"
-"SUBSCRIBE.Request"
-"UNSUBSCRIBE.Request"
-"CALL.Request"
+
+* "PUBLISH.Request"
+* "SUBSCRIBE.Request"
+* "UNSUBSCRIBE.Request"
+* "CALL.Request"
+
 ## 5.2. Serializations
 ITMP is a message based protocol that requires serialization of messages to octet sequences to be sent out on the wire.
 A message serialization format is assumed that (at least) provides the following types:
-"integer"
-"string" (UTF-8 encoded Unicode)
-"bool"
-"list"
-"dict" (with string keys)
+
+* "integer"
+* "string" (UTF-8 encoded Unicode)
+* "bool"
+* "list"
+* "dict" (with string keys)
+
 ITMP _itself_ only uses the above types, e.g. it does not use the JSON data types "number" (non-integer) and "null". The _application payloads_ transmitted by ITMP (e.g. in call arguments or event payloads) may use other types a concrete serialization format supports.
 There is no required serialization or set of serializations for ITMP implementations (but each implementation MUST, of course, implement at least one serialization format). Routers SHOULD implement more than one serialization format, enabling components using different kinds of serializations to connect to each other.
 ITMP defines two bindings for message serialization:
+
 1. JSON
 2. CBOR
+
 Other bindings for serialization may be defined in future ITMP versions.
+
 ### 5.2.1. JSON
+
 With JSON serialization, each ITMP message is serialized according to the JSON specification as described in RFC4627.
 Further, binary data follows a convention for conversion to JSON strings. For details see the Appendix.
+
 ### 5.2.2. CBOR
+
 With CBOR serialization, each ITMP message is serialized according to the CBOR specification.
+
 ## 5.3. Transports
+
 ITMP assumes a transport with the following characteristics:
+
 1. message-based
 2. bidirectional (full-duplex)
+
 There is no required transport or set of transports for ITMP implementations (but each implementation MUST, of course, implement at least one transport). Routers SHOULD implement more than one transport, enabling components using different kinds of transports to connect in an application.
+
 ### 5.3.1. WebSocket Transport
+
 The default transport binding for ITMP is WebSocket.
 In the Basic Profile, ITMP messages are transmitted as WebSocket messages: each ITMP message is transmitted as a separate WebSocket message (not WebSocket frame). The Advanced Profile may define other modes, e.g. a *batched mode* where multiple ITMP messages are transmitted via single WebSocket message.
 The ITMP protocol SHOULD BE negotiated during the WebSocket opening handshake between Peers using the WebSocket subprotocol negotiation mechanism.
+
 ITMP uses the following WebSocket subprotocol identifiers for unbatched modes:
-"itmp.json"
-"itmp.cbor"
+
+* "itmp.json"
+* "itmp.cbor"
+
 With "itmp.json", _all_ WebSocket messages MUST BE of type *text* (UTF8 encoded payload) and use the JSON message serialization.
 With "itmp.cbor", _all_ WebSocket messages MUST BE of type *binary* and use the CBOR message serialization.
 To avoid incompatibilities merely due to naming conflicts with WebSocket subprotocol identifiers, implementers SHOULD register identifiers for additional serialization formats with the official WebSocket subprotocol registry.
-5.3.2. Transport and Session Lifetime
+
+### 5.3.2. Transport and Session Lifetime
+
 ITMP implementations MAY choose to tie the lifetime of the underlying transport connection for a ITMP connection to that of a ITMP session, i.e. establish a new transport-layer connection as part of each new session establishment. They MAY equally choose to allow re-use of a transport connection, allowing subsequent ITMP sessions to be established using the same transport connection.
 The diagram below illustrates the full transport connection and session lifecycle for an implementation which uses WebSocket over TCP as the transport and allows the re-use of a transport connection.
+
 # 6. Messages
+
 All ITMP messages are a "list" with a first element "MessageType" followed by one or more message type specific elements:
 [MessageType|integer, ... one or more message type specific elements ...]
 
 The notation "Element|type" denotes a message element named "Element" of type "type", where "type" is one of
-"uri": a string URI as defined in Section 5.1.1
-"id": an integer ID as defined in Section 5.1.2
-"integer": a non-negative integer
-"string": a Unicode string, including the empty string
-"bool": a boolean value ("true" or "false") - integers MUST NOT be
-used instead of boolean value
-"dict": a dictionary (map) where keys MUST be strings, keys MUST
-be unique and serialization order is undefined (left to the
-serializer being used)
-"list": a list (array) where items can be again any of this
-enumeration
+
+* "uri": a string URI as defined in Section 5.1.1
+* "id": an integer ID as defined in Section 5.1.2
+* "integer": a non-negative integer
+* "string": a Unicode string, including the empty string
+* "bool": a boolean value ("true" or "false") - integers MUST NOT be used instead of boolean value 
+* "dict": a dictionary (map) where keys MUST be strings, keys MUST be unique and serialization order is undefined (left to the serializer being used)
+* "list": a list (array) where items can be again any of this enumeration
+
 _Example_
+
 A "SUBSCRIBE" message has the following format
-[SUBSCRIBE, Request|id, Topic|uri, Options|dict]
+
+`[SUBSCRIBE, Request|id, Topic|uri, Options|dict]`
+
 Here is an example message conforming to the above format
-[32, 713845233, "com.myapp.mytopic1", {}]
+
+`[32, 713845233, "com.myapp.mytopic1", {}]`
+
 ## 6.1. Extensibility
+
 Some ITMP messages contain "Options|dict" or "Details|dict" elements. This allows for future extensibility and implementations that only provide subsets of functionality by ignoring unimplemented attributes. Keys in "Options" and "Details" MUST be of type "string" and MUST match the regular expression "[a-z][a-z0-9_]{2,}" for ITMP predefined keys. Implementations MAY use implementation-specific keys that MUST match the regular expression "_[a-z0-9_]{3,}". Attributes unknown to an implementation MUST be ignored.
+
 ## 6.2. Polymorphism
+
 For a given "MessageType" the expected types are uniquely defined except the arguments. Hence there are polymorphic messages in ITMP.
+
 ## 6.4. Message Definitions
+
 ITMP defines the following messages that are explained in detail in the following sections.
 All messages are mandatory per role, i.e. in an implementation that only provides a Client with the role of Publisher MUST additionally implement sending "PUBLISH" and receiving "PUBLISHED" and "ERROR" messages.
+
 ### 6.4.1. Session Lifecycle
+
 ITMP not always uses sessions and in some implementation based on datagram transport can work in trusted environment without using sessions
+
 #### 6.4.1.1. CONNECT
+
 Sent by a Client to initiate opening of a ITMP session to a Server attaching to a Realm.
 
 `[CONNECT, Realm|uri, Details|dict]`
 
 in trusted environment CONNECT can be omitted, then client by default connected to empty ralm without extended features, mostly it is important to small mobile nodes without persistent connection
+
 #### 6.4.1.2. CONNECTED
+
 Sent by a Server to accept a Client. The ITMP session is now open.
 
 `[CONNECTED, Session|id, Details|dict]`
 
 #### 6.4.1.3. ABORT
+
 Sent by a Peer to abort the opening of a ITMP session. No response is expected.
 
 `[ABORT, Code|integer, Reason|string, Details|dict]`
 
 #### 6.4.1.4. DISCONNECT
+
 Sent by a Peer to close a previously opened ITMP session. Must be echo'ed by the receiving Peer.
 
 `[DISCONNECT, Code|integer, Reason|string, Details|dict]`
 
 ### 6.4.2. Service discovering
+
 #### 6.4.2.1. DESCRIBE
+
 Sent by peer to other peer to get peer/function/event description
 
 `[DESCRIBE, Request|id, Topic|uri, Options|dict]`
 
 #### 6.4.2.1. DESCRIPTION
+
 Sent by peer as answer to DESCRIBE message
 
 `[DESCRIPTION, Request|id, description|list, Options|dict]`
 
 ### 6.4.2. Publish & Subscribe
+
 #### 6.4.2.1. EVENT
+
 Sent by a Publisher to a Subscriber/Broker to publish an event without acknowledge.
 
 `[EVENT, Request|id, Topic|uri, Arguments, Options|dict]`
 
 An event is dispatched to a Subscriber for a given "Subscription|id" only once. On the other hand, a Subscriber that holds subscriptions with different "Subscription|id"s that all match a given event will receive the event on each matching subscription.
+
 #### 6.4.2.1. PUBLISH
+
 Sent by a Publisher to a Subscriber/Broker to publish an event with acknowledge awaiting.
 
 `[PUBLISH, Request|id, Topic|uri, Arguments, Options|dict]`
 
 #### 6.4.2.2. PUBLISHED
+
 Acknowledge sent by a Broker to a Publisher for acknowledged publications.
 
 `[PUBLISHED, Request|id, Publication|id, Options|dict]`
 
 #### 6.4.2.3. SUBSCRIBE
+
 Subscribe request sent by a Subscriber to a Broker to subscribe to a topic.
 
 `[SUBSCRIBE, Request|id, Topic|uri, Options|dict]`
 
 #### 6.4.2.3. SUBSCRIBE
+
 Subscribe request sent by a Subscriber to a Broker to subscribe to a topic.
 
 `[SUBSCRIBED, Request|id, SubscriptionId|id, Options|dict]`
 
 #### 6.4.2.5. UNSUBSCRIBE
+
 Unsubscribe request sent by a Subscriber to a Broker to unsubscribe a subscription.
 
 `[UNSUBSCRIBE, Request|id, SUBSCRIBED.SubscriptionId|id, Options|dict]`
@@ -280,42 +338,51 @@ Unsubscribe request sent by a Subscriber to a Broker to unsubscribe a subscripti
 
 
 #### 6.4.2.4. UNSUBSCRIBED
+
 Acknowledge sent by a Broker to a Subscriber to acknowledge a unsubscription.
 
 `[UNSUBSCRIBED, UNSUBSCRIBE.Request|id, Options|dict]`
 
 ### 6.4.3. Remote Procedure Calls
+
 #### 6.4.3.1. CALL
+
 Call as originally issued by the Caller.
 
 `[CALL, Request|id, Procedure|uri, Arguments, Options|dict]`
 
 #### 6.4.3.2. ARGUMENTS
+
 Provide additional arguments to the call to Callee during call execution.
 
 `[ARGUMENTS, CALL.Request|id, Arguments, Options|dict]`
 
 #### 6.4.3.2. PROGRESS
+
 Result of a call progress returned to Caller during call execution.
 
 `[PROGRESS, CALL.Request|id, Result, Details|dict]`
 
 #### 6.4.3.2. CANCEL
+
 Cancel the previously called function.
 
 `[CANCEL, CALL.Request|id, Details|dict]`
 
 #### 6.4.3.2. RESULT
+
 Result of a call as returned to Caller.
 
 `[RESULT, CALL.Request|id, Result, Details|dict]`
 
 #### 6.4.3.2. ERROR
+
 Result of a call as returned to Caller if the error occur during call execution.
 
 `[ERROR, CALL.Request|id, error code|integer, TextError|string, Details|dict]`
 
 ### 6.4.4. List of all messages and codes
+
 ```
 Connection
 0	[CONNECT, "fireguard",{"roles":{"pub":{}}}]	opened connection
@@ -349,20 +416,26 @@ subscribe
 20	[ANOUNCE, id, "name",["name&int"]]	announce interface or event
 21	[ACCEPTED, id,]	accept announcement
 ```
+
 ## 6.6. Extension Messages
+
 ITMP uses type codes from the core range [0, 19]. Implementations MAY define and use implementation specific messages with message type codes from the extension message range [20, 255]. For example, a router MAY implement router-to-router communication by using extension messages.
+
 ## 6.7. Empty Options and Details
+
 Implementations SHOULD avoid sending empty "Details" dicts.
 E.g. a "CALL" message
 
-`CALL, Request|id, Procedure|uri, Arguments, Options|dict]`
+`[CALL, Request|id, Procedure|uri, Arguments, Options|dict]`
 
 where " Options == {}" SHOULD be avoided, and instead
 
-`CALL, Request|id, Procedure|uri, Arguments]`
+`[CALL, Request|id, Procedure|uri, Arguments]`
 
 SHOULD be sent.
+
 ## 6.7. Empty Arguments 
+
 Implementations SHOULD avoid sending empty "Arguments" lists if Options is empty.
 E.g. a "CALL" message
 
@@ -373,14 +446,20 @@ where "Arguments == []" SHOULD be avoided, and instead
 `[CALL, Request|id, Procedure|uri]`
 
 SHOULD be sent.
+
 # 7. Sessions
+
 The message flow between Clients and Routers for opening and closing ITMP sessions involves the following messages:
+
 1. "CONNECT"
 2. "CONNECTED"
 3. "ABORT"
 4. "DISCONNECT"
+
 ## 7.1. Session Establishment
+
 ### 7.1.1. CONNECT
+
 After the underlying transport has been established, the opening of a ITMP session is initiated by the Client sending a "CONNECT" message to the Router
 
 `[CONNECT, Realm|uri, Details|dict]`
@@ -392,17 +471,23 @@ The "CONNECT" message MUST be the very first message sent by the Client after th
 In the ITMP Basic Profile without session authentication the Router will reply with a "CONNECTED" or "ABORT" message.
 A ITMP session starts its lifetime when the Router has sent a "CONNECTED" message to the Client, and ends when the underlying transport closes or when the session is closed explicitly by either peer sending the "DISCONNECT" message (see below).
 It is a protocol error to receive a second "CONNECT" message during the lifetime of the session and the Peer must fail the session if that happens.
+
 #### 7.1.1.1. Client: Role and Feature Announcement
+
 ITMP uses _Role & Feature announcement_ instead of _protocol versioning_ to allow implementations only supporting subsets of functionality future extensibility
 A Client must announce the roles it supports via "Connect.Details.roles|dict", with a key mapping to a "Connect.Details.roles.<role>|dict" where "<role>" can be:
-"publisher"
-"subscriber"
-"caller"
-"callee"
+
+* "publisher"
+* "subscriber"
+* "caller"
+* "callee"
+
 A Client can support any combination of the above roles but must support at least one role.
 The "<role>|dict" is a dictionary describing features supported by the peer for that role.
 This MUST be empty for ITMP Basic Profile implementations, and MUST be used by implementations implementing parts of the Advanced Profile to list the specific set of features they support.
+
 _Example: A Client that implements the Publisher and Subscriber roles of the ITMP Basic Profile._
+
 ```
 [0, "somerealm", {
 "roles": {
@@ -413,6 +498,7 @@ _Example: A Client that implements the Publisher and Subscriber roles of the ITM
 ```
 
 ### 7.1.2. CONNECTED
+
 A Router completes the opening of a ITMP session by sending a "CONNECTED" reply message to the Client.
 
 `[CONNECTED, Session|id, Details|dict]`
@@ -422,18 +508,24 @@ where
 "Details" is a dictionary that allows to provide additional information regarding the open session (see below).
 In the ITMP Basic Profile without session authentication, a "CONNECTED" message MUST be the first message sent by the Router, directly in response to a "CONNECT" message received from the Client. Extensions in the Advanced Profile MAY include intermediate steps and messages for authentication.
 Note. The behavior if a requested "Realm" does not presently exist is router-specific. A router may e.g. automatically create the realm, or deny the establishment of the session with a "ABORT" reply message.
+
 #### 7.1.2.1. Router: Role and Feature Announcement
+
 Similar to a Client announcing Roles and Features supported in the "CONNECT" message, a Router announces its supported Roles and Features in the "CONNECTED" message.
 A Router MUST announce the roles it supports via "Connected.Details.roles|dict", with a key mapping to a "Connected.Details.roles.<role>|dict" where "<role>" can be:
-"broker"
-"dealer"
-"publisher"
-"subscriber"
-"caller"
-"callee"
+
+* "broker"
+* "dealer"
+* "publisher"
+* "subscriber"
+* "caller"
+* "callee"
+
 A Router must support at least one role, and MAY support all roles.
 The "<role>|dict" is a dictionary describing features supported by the peer for that role. With ITMP Basic Profile implementations, this MUST be empty, but MUST be used by implementations implementing parts of the Advanced Profile to list the specific set of features they support
+
 _Example: A Router implementing the Broker role of the ITMP Basic Profile._
+
 ```
 [2, 9129137332, {
 "roles": {
@@ -443,9 +535,13 @@ _Example: A Router implementing the Broker role of the ITMP Basic Profile._
 ```
 
 ### 7.1.3. ABORT
+
 Both the Router and the Client may abort the opening of a ITMP session by sending an "ABORT" message.
-[ABORT, Code|integer, Reason|string, Details|dict]
+
+`[ABORT, Code|integer, Reason|string, Details|dict]`
+
 where
+
 "Code" MUST be an integer code of error.
 "Details" MUST be a dictionary that allows to provide additional, optional closing information (see below).
 No response to an "ABORT" message is expected.
@@ -453,13 +549,16 @@ No response to an "ABORT" message is expected.
 `[3, 407,"The realm does not exist."]`
 
 ## 7.2. Session Closing
+
 A ITMP session starts its lifetime with the Router sending a "CONNECTED" message to the Client and ends when the underlying transport disappears or when the ITMP session is closed explicitly by a "DISCONNECT" message sent by one Peer and a "DISCONNECT" message sent from the other Peer in response.
 
 `[DISCONNECT, Code|integer, Reason|string, Details|dict]`
 
 where
-"Code" MUST be an integer code of error.
-"Details" MUST be a dictionary that allows to provide additional, optional closing information (see below).
+
+> "Code" MUST be an integer code of error.
+> "Details" MUST be a dictionary that allows to provide additional, optional closing information (see below).
+
 _Example_. One Peer initiates closing
 
 `[6, 503, "The host is shutting down now."]`
@@ -478,16 +577,21 @@ and the other peer replies
 
 ### 7.2.1. Difference between ABORT and DISCONNECT
 The differences between "ABORT" and "DISCONNECT" messages are:
+
 1. "ABORT" gets sent only _before_ a Session is established, while "DISCONNECT" is sent only _after_ a Session is already established.
 2. "ABORT" is never replied to by a Peer, whereas "DISCONNECT" must be replied to by the receiving Peer
 Though "ABORT" and "DISCONNECT" are structurally identical, using different message types serves to reduce overloaded meaning of messages and simplify message handling code.
+
 # 8. Agent Identification
+
 When a software agent operates in a network protocol, it often identifies itself, its application type, operating system, software vendor, or software revision, by submitting a characteristic identification string to its operating peer.
 Similar to what browsers do with the "User-Agent" HTTP header, both the "CONNECT" and the "CONNECTED" message MAY disclose the ITMP implementation in use to its peer:
 CONNECT.Details.agent|string
 and
 CONNECTED.Details.agent|string
+
 _Example: A Client "CONNECT" message._
+
 ```
 [1, "somerealm", {
 "agent": "itmpJS-0.1.14",
@@ -506,22 +610,32 @@ _Example: A Router "CONNECTED" message._
 }
 }]
 ```
+
 # 9. Publish and Subscribe
+
 All of the following features for Publish & Subscribe are mandatory for ITMP Basic Profile implementations supporting the respective roles, i.e. _Publisher_, _Subscriber_.
-9.1. Subscribing and Unsubscribing
+
+## 9.1. Subscribing and Unsubscribing
+
 The message flow between Clients implementing the role of Subscriber and Routers implementing the role of Broker for subscribing and unsubscribing involves the following messages:
+
 1. "SUBSCRIBE"
 2. "SUBSCRIBED"
 3. "UNSUBSCRIBE"
 4. "UNSUBSCRIBED"
 5. "ERROR"
+
 A Subscriber may subscribe to zero, one or more topics, and a Publisher publishes to topics without knowledge of subscribers.
 Upon subscribing to a topic via the "SUBSCRIBE" message, a Subscriber will receive any future events published to the respective topic by Publishers, and will receive those events asynchronously.
 A subscription lasts for the duration of a session, unless a Subscriber opts out from a previously established subscription via the "UNSUBSCRIBE" message.
 A Subscriber may have more than one event handler attached to the same subscription. This can be implemented in different ways: a) a Subscriber can recognize itself that it is already subscribed and just attach another handler to the subscription for incoming events, b) or it can send a new "SUBSCRIBE" message to broker (as it would be first) and upon receiving a "SUBSCRIBED.Subscription|id" it already knows about, attach the handler to the existing subscription
+
 ### 9.1.1. SUBSCRIBE
+
 A Subscriber communicates its interest in a topic to a Broker by sending a "SUBSCRIBE" message:
-[SUBSCRIBE, Request|id, Topic|uri, Options|dict]
+
+`[SUBSCRIBE, Request|id, Topic|uri, Options|dict]`
+
 where
 "Request" MUST be a random, ephemeral ID chosen by the Subscriber and used to correlate the Broker's response with the request.
 "Options" MUST be a dictionary that allows to provide additional subscription request details in a extensible way. This is described further below.
@@ -531,7 +645,9 @@ _Example_
 `[32, 713845233, "com.myapp.mytopic1", {}]`
 
 A Broker, receiving a "SUBSCRIBE" message, can fullfill or reject the subscription, so it answers with "SUBSCRIBED" or "ERROR" messages.
+
 ### 9.1.2. SUBSCRIBED
+
 If the Broker is able to fulfill and allow the subscription, it answers by sending a "SUBSCRIBED" message to the Subscriber
 
 `[SUBSCRIBED, SUBSCRIBE.Request|id, Subscription|id]`
