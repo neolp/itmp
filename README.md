@@ -219,13 +219,13 @@ Sent by a Client to initiate opening of a ITMP session to a Server attaching to 
 in trusted environment CONNECT can be omitted, then client by default connected to empty ralm without extended features, mostly it is important to small mobile nodes without persistent connection
 #### 6.4.1.2. CONNECTED
 Sent by a Server to accept a Client. The ITMP session is now open.
-'[CONNECTED, Session|id, Details|dict]
+`[CONNECTED, Session|id, Details|dict]`
 #### 6.4.1.3. ABORT
 Sent by a Peer to abort the opening of a ITMP session. No response is expected.
-'[ABORT, Code|integer, Reason|string, Details|dict]
+`[ABORT, Code|integer, Reason|string, Details|dict]`
 #### 6.4.1.4. DISCONNECT
 Sent by a Peer to close a previously opened ITMP session. Must be echo'ed by the receiving Peer.
-'[DISCONNECT, Code|integer, Reason|string, Details|dict]
+`[DISCONNECT, Code|integer, Reason|string, Details|dict]`
 ### 6.4.2. Service discovering
 #### 6.4.2.1. DESCRIBE
 Sent by peer to other peer to get peer/function/event description
