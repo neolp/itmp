@@ -215,71 +215,71 @@ All messages are mandatory per role, i.e. in an implementation that only provide
 ITMP not always uses sessions and in some implementation based on datagram transport can work in trusted environment without using sessions
 #### 6.4.1.1. CONNECT
 Sent by a Client to initiate opening of a ITMP session to a Server attaching to a Realm.
-[CONNECT, Realm|uri, Details|dict]
+'[CONNECT, Realm|uri, Details|dict]
 in trusted environment CONNECT can be omitted, then client by default connected to empty ralm without extended features, mostly it is important to small mobile nodes without persistent connection
 #### 6.4.1.2. CONNECTED
 Sent by a Server to accept a Client. The ITMP session is now open.
-[CONNECTED, Session|id, Details|dict]
+'[CONNECTED, Session|id, Details|dict]
 #### 6.4.1.3. ABORT
 Sent by a Peer to abort the opening of a ITMP session. No response is expected.
-[ABORT, Code|integer, Reason|string, Details|dict]
+'[ABORT, Code|integer, Reason|string, Details|dict]
 #### 6.4.1.4. DISCONNECT
 Sent by a Peer to close a previously opened ITMP session. Must be echo'ed by the receiving Peer.
-[DISCONNECT, Code|integer, Reason|string, Details|dict]
+'[DISCONNECT, Code|integer, Reason|string, Details|dict]
 ### 6.4.2. Service discovering
 #### 6.4.2.1. DESCRIBE
 Sent by peer to other peer to get peer/function/event description
-[DESCRIBE, Request|id, Topic|uri, Options|dict]
+'[DESCRIBE, Request|id, Topic|uri, Options|dict]
 #### 6.4.2.1. DESCRIPTION
 Sent by peer as answer to DESCRIBE message
-[DESCRIPTION, Request|id, description|list, Options|dict]
+'[DESCRIPTION, Request|id, description|list, Options|dict]
 ### 6.4.2. Publish & Subscribe
 #### 6.4.2.1. EVENT
 Sent by a Publisher to a Subscriber/Broker to publish an event without acknowledge.
-[EVENT, Request|id, Topic|uri, Arguments, Options|dict]
+'[EVENT, Request|id, Topic|uri, Arguments, Options|dict]
 An event is dispatched to a Subscriber for a given "Subscription|id" only once. On the other hand, a Subscriber that holds subscriptions with different "Subscription|id"s that all match a given event will receive the event on each matching subscription.
 #### 6.4.2.1. PUBLISH
 Sent by a Publisher to a Subscriber/Broker to publish an event with acknowledge awaiting.
-[PUBLISH, Request|id, Topic|uri, Arguments, Options|dict]
+'[PUBLISH, Request|id, Topic|uri, Arguments, Options|dict]
 #### 6.4.2.2. PUBLISHED
 Acknowledge sent by a Broker to a Publisher for acknowledged publications.
-[PUBLISHED, Request|id, Publication|id, Options|dict]
+'[PUBLISHED, Request|id, Publication|id, Options|dict]
 #### 6.4.2.3. SUBSCRIBE
 Subscribe request sent by a Subscriber to a Broker to subscribe to a topic.
-[SUBSCRIBE, Request|id, Topic|uri, Options|dict]
+'[SUBSCRIBE, Request|id, Topic|uri, Options|dict]
 #### 6.4.2.3. SUBSCRIBE
 Subscribe request sent by a Subscriber to a Broker to subscribe to a topic.
 [SUBSCRIBED, Request|id, SubscriptionId|id, Options|dict]
 #### 6.4.2.5. UNSUBSCRIBE
 Unsubscribe request sent by a Subscriber to a Broker to unsubscribe a subscription.
-[UNSUBSCRIBE, Request|id, SUBSCRIBED.SubscriptionId|id, Options|dict]
-[UNSUBSCRIBE, Request|id, Topic|uri, Options|dict]
+'[UNSUBSCRIBE, Request|id, SUBSCRIBED.SubscriptionId|id, Options|dict]
+'[UNSUBSCRIBE, Request|id, Topic|uri, Options|dict]
 
 #### 6.4.2.4. UNSUBSCRIBED
 Acknowledge sent by a Broker to a Subscriber to acknowledge a unsubscription.
-[UNSUBSCRIBED, UNSUBSCRIBE.Request|id, Options|dict]
+'[UNSUBSCRIBED, UNSUBSCRIBE.Request|id, Options|dict]
 ### 6.4.3. Remote Procedure Calls
 #### 6.4.3.1. CALL
 Call as originally issued by the Caller.
-[CALL, Request|id, Procedure|uri, Arguments, Options|dict]
+'[CALL, Request|id, Procedure|uri, Arguments, Options|dict]
 #### 6.4.3.2. ARGUMENTS
 Provide additional arguments to the call to Callee during call execution.
-[ARGUMENTS, CALL.Request|id, Arguments, Options|dict]
+'[ARGUMENTS, CALL.Request|id, Arguments, Options|dict]
 #### 6.4.3.2. PROGRESS
 Result of a call progress returned to Caller during call execution.
-[PROGRESS, CALL.Request|id, Result, Details|dict]
+'[PROGRESS, CALL.Request|id, Result, Details|dict]
 #### 6.4.3.2. CANCEL
 Cancel the previously called function.
-[CANCEL, CALL.Request|id, Details|dict]
+'[CANCEL, CALL.Request|id, Details|dict]
 #### 6.4.3.2. RESULT
 Result of a call as returned to Caller.
-[RESULT, CALL.Request|id, Result, Details|dict]
+'[RESULT, CALL.Request|id, Result, Details|dict]
 
 #### 6.4.3.2. ERROR
 Result of a call as returned to Caller if the error occur during call execution.
-[ERROR, CALL.Request|id, error code|integer, TextError|string, Details|dict]
+'[ERROR, CALL.Request|id, error code|integer, TextError|string, Details|dict]
 
-list of all messages and codes
+### 6.4.4. List of all messages and codes
 ```
 Connection
 0	[CONNECT, "fireguard",{"roles":{"pub":{}}}]	opened connection
