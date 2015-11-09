@@ -465,11 +465,14 @@ After the underlying transport has been established, the opening of a ITMP sessi
 `[CONNECT, Realm|uri, Details|dict]`
 
 where
+
 "Realm" is a string identifying the realm this session should attach to
+
 "Details" is a dictionary that allows to provide additional opening information (see below).
 The "CONNECT" message MUST be the very first message sent by the Client after the transport has been established.
 In the ITMP Basic Profile without session authentication the Router will reply with a "CONNECTED" or "ABORT" message.
 A ITMP session starts its lifetime when the Router has sent a "CONNECTED" message to the Client, and ends when the underlying transport closes or when the session is closed explicitly by either peer sending the "DISCONNECT" message (see below).
+
 It is a protocol error to receive a second "CONNECT" message during the lifetime of the session and the Peer must fail the session if that happens.
 
 #### 7.1.1.1. Client: Role and Feature Announcement
@@ -556,8 +559,9 @@ A ITMP session starts its lifetime with the Router sending a "CONNECTED" message
 
 where
 
-> "Code" MUST be an integer code of error.
-> "Details" MUST be a dictionary that allows to provide additional, optional closing information (see below).
+"Code" MUST be an integer code of error.
+
+"Details" MUST be a dictionary that allows to provide additional, optional closing information (see below).
 
 _Example_. One Peer initiates closing
 
@@ -576,6 +580,7 @@ and the other peer replies
 `[6, 200, "connection closed"]`
 
 ### 7.2.1. Difference between ABORT and DISCONNECT
+
 The differences between "ABORT" and "DISCONNECT" messages are:
 
 1. "ABORT" gets sent only _before_ a Session is established, while "DISCONNECT" is sent only _after_ a Session is already established.
@@ -586,8 +591,11 @@ Though "ABORT" and "DISCONNECT" are structurally identical, using different mess
 
 When a software agent operates in a network protocol, it often identifies itself, its application type, operating system, software vendor, or software revision, by submitting a characteristic identification string to its operating peer.
 Similar to what browsers do with the "User-Agent" HTTP header, both the "CONNECT" and the "CONNECTED" message MAY disclose the ITMP implementation in use to its peer:
+
 CONNECT.Details.agent|string
+
 and
+
 CONNECTED.Details.agent|string
 
 _Example: A Client "CONNECT" message._
@@ -637,9 +645,13 @@ A Subscriber communicates its interest in a topic to a Broker by sending a "SUBS
 `[SUBSCRIBE, Request|id, Topic|uri, Options|dict]`
 
 where
+
 "Request" MUST be a random, ephemeral ID chosen by the Subscriber and used to correlate the Broker's response with the request.
+
 "Options" MUST be a dictionary that allows to provide additional subscription request details in a extensible way. This is described further below.
+
 "Topic" is the topic the Subscriber wants to subscribe to and MUST be an URI.
+
 _Example_
 
 `[32, 713845233, "com.myapp.mytopic1", {}]`
@@ -653,8 +665,11 @@ If the Broker is able to fulfill and allow the subscription, it answers by sendi
 `[SUBSCRIBED, SUBSCRIBE.Request|id, Subscription|id]`
 
 where
+
 "SUBSCRIBE.Request" MUST be the ID from the original request.
+
 "Subscription" MUST be an ID chosen by the Broker for the subscription.
+
 _Example_
 
 `[33, 713845233, 5512315355]`
@@ -667,9 +682,13 @@ When the request for subscription cannot be fulfilled by the Broker, the Broker 
 `[ERROR, SUBSCRIBE.Request|id, Code|integer, Description|string, Details|dict]`
 
 where
+
 "SUBSCRIBE.Request" MUST be the ID from the original request.
+
 "Code" MUST be an code that gives the error of why the request could not be fulfilled.
-" Description" MUST be an string that gives the error of why the request could not be fulfilled.
+
+"Description" MUST be an string that gives the error of why the request could not be fulfilled.
+
 _Example_
 
 `[8, 713845233, 401, " not authorized"]`
@@ -680,53 +699,73 @@ When a Subscriber is no longer interested in receiving events for a subscription
 `[UNSUBSCRIBE, Request|id, SUBSCRIBED.Subscription|id]`
 
 where
+
 "Request" MUST be a random, ephemeral ID chosen by the Subscriber and used to correlate the Broker's response with the request.
+
 "SUBSCRIBED.Subscription" MUST be the ID for the subscription to unsubscribe from, originally handed out by the Broker to the Subscriber.
+
 _Example_
 
 `[34, 85346237, 5512315355]`
 
 ### 9.1.5. UNSUBSCRIBED
+
 Upon successful unsubscription, the Broker sends an "UNSUBSCRIBED" message to the Subscriber
 
 `[UNSUBSCRIBED, UNSUBSCRIBE.Request|id]`
 
 where
-o "UNSUBSCRIBE.Request" MUST be the ID from the original request.
+
+"UNSUBSCRIBE.Request" MUST be the ID from the original request.
+
 _Example_
 
 `[35, 85346237]`
 
 ### 9.1.6. Unsubscribe ERROR
+
 When the request fails, the Broker sends an "ERROR"
 
 `[ERROR, UNSUBSCRIBE.Request|id, Code|integer, Description|string, Details|dict]`
 
 where
+
 "UNSUBSCRIBE.Request" MUST be the ID from the original request.
+
 "Code" MUST be an code that gives the error of why the request could not be fulfilled.
-" Description" MUST be an string that gives the error of why the request could not be fulfilled.
+
+"Description" MUST be an string that gives the error of why the request could not be fulfilled.
+
 _Example_
 
 `[8, 85346237, 404, "No such subscription"]`
 
 ## 9.2. Publishing and Events
 The message flow between Publishers, a Broker and Subscribers for publishing to topics and dispatching events involves the following messages:
+
 3. "EVENT"
 1. "PUBLISH"
 2. "PUBLISHED"
 4. "ERROR"
+
 ### 9.2.1. EVENT
+
 When a Publisher requests to publish an event to some topic, it sends a "EVENT" message to a Broker:
 
 `[EVENT, Request|id, Topic|uri, Arguments, Options|dict]`
 
 where
+
 "Request" is a random, ephemeral ID chosen by the Publisher and used to correlate the Broker's response with the request.
+
 "Topic" is the topic published to.
+
 "Arguments" is a list or dictionary of application-level event payload elements. The list or dictionary may be of zero length.
+
 "Options" is a dictionary that allows to provide additional publication request details in an extensible way. This is described further below.
+
 That publications are unacknowledged, and the Broker will not respond, whether the publication was successful indeed or not. 
+
 _Example_
 
 `[16, 239714735, "com.myapp.mytopic1"]`
@@ -740,17 +779,24 @@ _Example_
 `[16, 239714735, "com.myapp.mytopic1", {"color": "orange", "sizes": [23, 42, 7]}]`
 
 ### 9.2.1. PUBLISH
+
 When a Publisher requests to publish an event to some topic, it sends a "PUBLISH" message to a Broker:
 
 `[PUBLISH, Request|id, Topic|uri, Arguments, Options|dict]`
 
 where
+
 "Request" is a random, ephemeral ID chosen by the Publisher and used to correlate the Broker's response with the request.
+
 "Topic" is the topic published to.
+
 "Arguments" is a list or dictionary of application-level event payload elements. The list or dictionary may be of zero length.
+
 "Options" is a dictionary that allows to provide additional publication request details in an extensible way. This is described further below.
+
 If the Broker is able to fulfill and allowing the publication, the Broker will send the event to all current Subscribers of the topic of the published event.
 Publications are acknowledged, and the Broker will respond, depends the publication was successful indeed or not. 
+
 _Example_
 
 `[16, 239714735, "com.myapp.mytopic1"]`
@@ -764,48 +810,67 @@ _Example_
 `[16, 239714735, "com.myapp.mytopic1", {"color": "orange", "sizes": [23, 42, 7]}]`
 
 ### 9.2.2. PUBLISHED
+
 If the Broker is able to fulfill and allowing the publication of PUBLISH message, the Broker replies by sending a "PUBLISHED" message to the Publisher:
 
 `[PUBLISHED, PUBLISH.Request|id, Publication|id]`
 
 where
+
 "PUBLISH.Request" is the ID from the original publication request.
+
 "Publication" is a ID chosen by the Broker for the publication.
+
 _Example_
 
 `[17, 239714735, 4429313566]`
 
 ### 9.2.3. Publish ERROR
+
 When the PUBLISH request for publication cannot be fulfilled by the Broker, the Broker sends back an "ERROR" message to the Publisher
 
 `[ERROR, PUBLISH.Request|id, Code|integer, Description|string, Details|dict]`
 
 where
+
 "PUBLISH.Request" is the ID from the original publication request.
+
 "Code" is an number that gives the error of why the request could not be fulfilled.
+
 _Example_
 
 `[8, 239714735, 401, " not authorized"]`
 
 # 10. Remote Procedure Calls
+
 All of the following features for Remote Procedure Calls are mandatory for ITMP Basic Profile implementations supporting the respective roles.
+
 ## 10.2. Calling
 The message flow between Callers, a Dealer and Callees for calling procedures and invoking endpoints involves the following messages:
+
 1. "CALL"
 2. "ARGUMENTS"
 2. "RESULT"
 3. "ERROR"
+
 The execution of remote procedure calls is asynchronous, and there may be more than one call outstanding. A call is called outstanding (from the point of view of the Caller), when a (final) result or error has not yet been received by the Caller.
+
 ### 10.2.1. CALL
+
 When a Caller wishes to call a remote procedure, it sends a "CALL" message to a Dealer:
 
 `[CALL, Request|id, Procedure|uri, Arguments, Options|dict]`
 
 where
+
 "Request" is a random, ephemeral ID chosen by the Caller and used to correlate the Dealer's response with the request.
+
 "Options" is a dictionary that allows to provide additional call request details in an extensible way. This is described further below.
+
 "Procedure" is the URI of the procedure to be called.
+
 "Arguments" is a list of positional call arguments (each of arbitrary type) or dictionary of keyword call arguments. The Arguments may be empty or omitted. 
+
 _Example_
 
 `[48, 7814135, "com.myapp.ping"]`
@@ -822,15 +887,20 @@ _Example_
 
 `[48, 7814135, "com.myapp.user.new", {"firstname": "John", "surname": "Doe"}]`
 
-10.2.3. RESULT
+### 10.2.3. RESULT
+
 If the Callee is able to successfully process and finish the execution of the call, it answers by sending a "RESULT" message to the Dealer:
 
 `[RESULT, CALL.Request|id, Arguments, Options|dict]`
 
 where
+
 "CALL.Request" is the ID from the original invocation request.
+
 "Arguments" is a list of positional result elements (each of arbitrary type) or dictionary of keyword result elements (each of arbitrary type). The Arguments may be empty or even omitted.
+
 "Options"is a dictionary that allows to provide additional options.
+
 _Example_
 
 `[70, 6131533]`
@@ -848,21 +918,29 @@ _Example_
 `[70, 6131533, {"userid": 123, "karma": 10}]`
 
 ### 10.2.5. ERROR
+
 If the Callee is unable to process or finish the execution of the call, or the application code implementing the procedure raises an exception or otherwise runs into an error, the Callee sends an "ERROR" message to the Dealer:
 
 `[ERROR, CALL.Request|id, Code|integer, Description|string, Details|dict]`
 
 where
+
 "CALL.Request" is the ID from the original "CALL" request previously sent by the Dealer to the Callee.
+
 "Details" is a dictionary with additional error details.
+
 "Code" is an integer that identifies the error of why the request could not be fulfilled.
+
 _Example_
 
 `[8, 6131533, 504, "time out", {"severity": 3}]`
 
-11. Error codes
+# 11. Error codes
+
 ITMP pre-defines the following error codes. ITMP peers MUST use only the defined error messages.
-11.1.1. 400 Bad request
+
+### 11.1.1. 400 Bad request
+
 When a Peer provides an incorrect URI for any URI-based attribute of a ITMP message (e.g. realm, topic), then the other Peer MUST respond with an "ERROR" message and give the following 400:
 11.1.2. Interaction
 Peer provided an incorrect URI for any URI-based attribute of ITMP message, such as realm, topic or procedure
@@ -873,14 +951,18 @@ A Broker could not perform an unsubscribe, since the given subscription is not a
 404 Not Found 
 A call failed since the given argument types or values are not acceptable to the called procedure. In this case the Callee may throw this error. Alternatively a Router may throw this error if it performed _payload validation_ of a call, call result, call error or publish, and the payload did not conform to the requirements.
 512 Bag argument
+
 ### 11.1.3. Session Close
+
 The Peer is shutting down completely - used as a "DISCONNECT" (or "ABORT") reason.
 513 system shutdown
 The Peer want to leave the realm - used as a "DISCONNECT" reason.
 514 close realm
 A Peer acknowledges ending of a session - used as a "DISCONNECT" reply reason.
 202 goodbye and out
-11.1.4. Authorization
+
+### 11.1.4. Authorization
+
 A join, call, register, publish or subscribe failed, since the Peer is not authorized to perform the operation.
 401 not authorized
 A Dealer or Broker could not determine if the Peer is authorized to perform a join, call, register, publish or subscribe, since the authorization operation _itself_ failed. E.g. a custom authorizer did run into an error.
@@ -894,42 +976,58 @@ A _Dealer_ could not perform a call, since a procedure with the given URI is reg
 403 no eligible callee
 
 # 12. Ordering Guarantees
+
 All ITMP implementations, in particular Routers MUST support the following ordering guarantees.
 A ITMP Advanced Profile may provide applications options to relax ordering guarantees, in particular with distributed calls.
+
 ## 12.1. Publish & Subscribe Ordering
+
 Regarding *Publish & Subscribe*, the ordering guarantees are as follows:
 If _Subscriber A_ is subscribed to both *Topic 1* and *Topic 2*, and _Publisher B_ first publishes an *Event 1* to *Topic 1* and then an *Event 2* to *Topic 2*, then _Subscriber A_ will first receive *Event 1* and then *Event 2*. This also holds if *Topic 1* and *Topic 2* are identical.
 In other words, ITMP guarantees ordering of events between any given _pair_ of Publisher and Subscriber.
 Further, if _Subscriber A_ subscribes to *Topic 1*, the "SUBSCRIBED" message will be sent by the _Broker_ to _Subscriber A_ before any "EVENT" message for *Topic 1*.
 There is no guarantee regarding the order of return for multiple subsequent subscribe requests. A subscribe request might require the _Broker_ to do a time-consuming lookup in some database, whereas another subscribe request second might be permissible immediately.
+
 ## 12.2. Remote Procedure Call Ordering
+
 Regarding *Remote Procedure Calls*, the ordering guarantees are as follows:
 If _Callee A_ has registered endpoints for both *Procedure 1* and *Procedure 2*, and _Caller B_ first issues a *Call 1* to *Procedure 1* and then a *Call 2* to *Procedure 2*, and both calls are routed to _Callee A_, then _Callee A_ will first receive an invocation corresponding to *Call 1* and then *Call 2*. This also holds if *Procedure 1* and *Procedure 2* are identical.
 In other words, ITMP guarantees ordering of invocations between any given _pair_ of Caller and Callee.
 There are no guarantees on the order of call results and errors in relation to _different_ calls, since the execution of calls upon different invocations of endpoints in Callees are running independently. A first call might require an expensive, long-running computation, whereas a second, subsequent call might finish immediately.
-13. Security Model
+
+# 13. Security Model
+
 The following discusses the security model for the Basic Profile. Any changes or extensions to this for the Advanced Profile are discussed further on as part of the Advanced Profile definition.
+
 ## 13.1. Transport Encryption and Integrity
+
 ITMP transports may provide (optional) transport-level encryption and integrity verification. If so, encryption and integrity is point-to- point: between a Client and the Router it is connected to.
 Transport-level encryption and integrity is solely at the transport- level and transparent to ITMP. ITMP itself deliberately does not specify any kind of transport-level encryption.
 Implementations that offer TCP based transport such as ITMP-over- WebSocket or ITMP-over-RawSocket SHOULD implement Transport Layer Security (TLS).
 ITMP deployments are encouraged to stick to a TLS-only policy with the TLS code and setup being hardened.
 Further, when a Client connects to a Router over a local-only transport such as Unix domain sockets, the integrity of the data transmitted is implicit (the OS kernel is trusted), and the privacy of the data transmitted can be assured using file system permissions (no one can tap a Unix domain socket without appropriate permissions or being root).
+
 ## 13.2. Router Authentication
+
 To authenticate Routers to Clients, deployments MUST run TLS and Clients MUST verify the Router server certificate presented. ITMP itself does not provide mechanisms to authenticate a Router (only a Client).
 The verification of the Router server certificate can happen
+
 1. against a certificate trust database that comes with the Clients operating system
 2. against an issuing certificate/key hard-wired into the Client
 3. by using new mechanisms like DNS-based Authentication of Named Enitities (DNSSEC)/TLSA
+
 Further, when a Client connects to a Router over a local-only transport such as Unix domain sockets, the file system permissions can be used to create implicit trust. E.g. if only the OS user under which the Router runs has the permission to create a Unix domain socket under a specific path, Clients connecting to that path can trust in the router authenticity.
+
 ## 13.3. Client Authentication
+
 Authentication of a Client to a Router at the ITMP level is not part of the basic profile.
 When running over TLS, a Router MAY authenticate a Client at the transport level by doing a _client certificate based authentication_.
+
 ### 13.3.1. Routers are trusted
+
 Routers are _trusted_ by Clients.
 In particular, Routers can read (and modify) any application payload transmitted in events, calls, call results and call errors.
 Hence, Routers do not provide confidentiality with respect to application payload, and also do not provide authenticity or integrity of application payloads that could be verified by a receiving Client.
 Routers need to read the application payloads in cases of automatic conversion between different serialization formats.
 Further, Routers are trusted to *actually perform* routing as specified. E.g. a Client that publishes an event has to trust a Router that the event is actually dispatched to all (eligible) Subscribers by the Router.
 A rogue Router might deny normal routing operation without a Client taking notice.
-
