@@ -279,7 +279,8 @@ Result of a call as returned to Caller.
 Result of a call as returned to Caller if the error occur during call execution.
 [ERROR, CALL.Request|id, error code|integer, TextError|string, Details|dict]
 
-  
+list of all messages and codes
+```
 Connection
 0	[CONNECT, "fireguard",{"roles":{"pub":{}}}]	opened connection
 1	[CONNECTED, 3245,{"roles":{"sub":{}}}]	confirm connection
@@ -311,7 +312,7 @@ subscribe
 subscribe
 20	[ANOUNCE, id, "name",["name&int"]]	announce interface or event
 21	[ACCEPTED, id,]	accept announcement
-
+```
 ## 6.6. Extension Messages
 ITMP uses type codes from the core range [0, 19]. Implementations MAY define and use implementation specific messages with message type codes from the extension message range [20, 255]. For example, a router MAY implement router-to-router communication by using extension messages.
 ## 6.7. Empty Options and Details
