@@ -664,6 +664,53 @@ _Example: A Router "CONNECTED" message._
 }]
 ```
 
+## 8.1 Node description
+
+```
+<field description> ::= <name><description><signature>
+<name> ::= string
+<signature> ::= <interface> | <func> | <event> | <container>
+<interface> ::= ':' [ <interface name> [ , <interface name> ] ]
+<interface name> ::= string
+<container> ::= '*' [ <interface name> [ , <interface name> ] ]
+<func> ::= '&' <return type list> [ ‘(‘ <argument type list> ’)’ ]
+<event> ::= '!' <type list>
+<return type list> ::= <type list>
+<argument type list> ::= <type list>
+<type list> ::= [ <type> [ , <type> ] ]
+<type> ::= <simple type> | '['<type list>']' | '{' <prop name> [ '?' ] : <type> [ , <prop name> : <type> ] '}'
+<simple type> ::= <type char> [<description>]
+<description>::='`' [<name>] [<version>] [<UniqueId>] [<units>] [<variants>] [<manufacturer>] '`'
+<version>::=’%’ string
+<UniqueId>::=’#’ string
+<units> ::= '$' string
+<variants> ::= '<' <value> [ , <value> ] '>'
+<manufacturer> ::= '@' string
+<type char> ::= i | s | b | f | B | N | Q | I | U | X | T | F | D | S
+```
+
+simple type JSON and CBOR encoded
+
+* i integer
+* s  UTF-8 string
+* b boolean
+* f  floating point number
+
+fixed types JSON BASE64 string or CBOR byte array encoded as sequence (for small controllers without complex encoders)
+
+* B  8-bit unsigned integer (byte)
+* N  16-bit signed integer
+* Q  16-bit unsigned integer
+* I  32-bit signed integer
+* U  32-bit unsigned integer
+* X  64-bit signed integer
+* T  64-bit unsigned integer
+* F  single-precision floating point (IEEE 754)
+* D  double-precision floating point (IEEE 754)
+* S  UTF-8 string with length prefix
+
+any sequence of primitive typed values encoded as byte array or base64 encoded string for json
+
 # 9. Publish and Subscribe
 
 All of the following features for Publish & Subscribe are mandatory for ITMP Basic Profile implementations supporting the respective roles, i.e. _Publisher_, _Subscriber_.
@@ -1019,6 +1066,21 @@ A _Peer_ requested an interaction with an option that was disallowed by the _Rou
 405 option not allowed
 A _Dealer_ could not perform a call, since a procedure with the given URI is registered, but _Callee Black- and Whitelisting_ and/or _Caller Exclusion_ lead to the exclusion of (any) _Callee_ providing the procedure.
 403 no eligible callee
+
+# 12. Examples
+
+## 12.1  Simple example
+
+| Client Send | Server send |
+| --- | --- |
+| `[DESCRIBE, 0, ""]` | ```[DESCRIPTION, 0, ["FireGuard`Fire Alarm and automatic Destiguishing board%1.0.10.435#231268834874553@NSC Communication Siberia`:Node,Fireguard","getState&s(s)","StateChanged!ss"] ]``` |
+| `[DESCRIBE, 1, "getState"]` | ```[DESCRIPTION, 1, ["getState`Get Area State`&s`Area state`(s`Area name`)"] ]``` |
+| `[DESCRIBE, 2, "getState"]` | ```[DESCRIPTION, 2, ["StateChanged`Inform about new state of area`!s`Area name`s`Area state`"] ]``` |
+| `[CALL, 3, "getState", ["Area1"] ]` | ```[RESULT, 3, ["Norm"]``` |
+| `-` | ```[EVENT, 0, "StateChanged" ["Area1","Alarm"]``` |
+| `-` | ```[PUBLISH, 1, "StateChanged" ["Area1","Norm"]``` |
+| `[PUBLISHED,1]` | `-` |
+
 
 # 12. Ordering Guarantees
 
