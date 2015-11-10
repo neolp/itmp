@@ -34,63 +34,99 @@ authentication and authorization schemes,
 message persistence, and,
 management and monitoring.
 The definition and documentation of such Router features is outside the scope of this document.
+
 ## 1.4. Relationship to WebSocket
+
 ITMP uses WebSocket as its default transport binding, and is a registered WebSocket subprotocol.
+
 # 2. Conformance Requirements
+
 All diagrams, examples, and notes in this specification are non-normative, as are all sections explicitly marked non-normative. Everything else in this specification is normative.
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119 [RFC2119].
-Requirements phrased in the imperative as part of algorithms (such as "strip any leading space characters" or "return false and abort these steps") are to be interpreted with the meaning of the key word
-("MUST", "SHOULD", "MAY", etc.) used in introducing the algorithm.
+Requirements phrased in the imperative as part of algorithms (such as "strip any leading space characters" or "return false and abort these steps") are to be interpreted with the meaning of the key word ("MUST", "SHOULD", "MAY", etc.) used in introducing the algorithm.
 
 Conformance requirements phrased as algorithms or specific steps MAY be implemented in any manner, so long as the end result is equivalent.
+
 ## 2.1. Terminology and Other Conventions
+
 Key terms such as named algorithms or definitions are indicated like _this_ when they first occur, and are capitalized throughout the text.
+
 # 3. Realms, Sessions and Transports
+
 A Realm is a ITMP routing and administrative domain, optionally protected by authentication and authorization. ITMP messages are only routed within a Realm. Realm with empty name is default.
 A Session is a transient conversation between two Peers attached to a Realm and running over a Transport.
 A Transport connects two ITMP Peers and provides a channel over which ITMP messages for a ITMP Session can flow in both directions.
 ITMP can run over any Transport which is message-based, bidirectional, reliable and ordered.
 The default transport for ITMP is WebSocket [RFC6455], where ITMP is an officially registered [1] subprotocol.
+
 # 4. Peers and Roles
+
 A ITMP Session connects two Peers. Each ITMP Peer MUST implement one role, and MAY implement more roles.
 A Client MAY implement any combination of the Roles:
-Callee
-Caller
-Publisher
-Subscriber
-Broker
-This document describes ITMP as in client-to-router communication and direct client-to-client communication is supported by ITMP. Router-to-router communication MAY be defined same way.
+
+* Callee
+* Caller
+* Publisher
+* Subscriber
+
+Some time you need to combine several Roles - you can use 
+
+* Broker = [ Callee +  Caller + Publisher + Subscriber ]
+* Node = [Calle + Publisher]
+
+This document describes ITMP as in client-to-client communication, client-to-router and router-to-router communication is supported by ITMP by same way.
+
 ## 4.1. Symmetric Messaging
+
 It is important to note that though the establishment of a Transport might have a inherent asymmetry (like a TCP client establishing a WebSocket connection to a server), and Clients establish ITMP sessions by attaching to Realms on Routers, ITMP itself is designed to be fully symmetric for application components.
 After the transport and a session have been established, any application component may act as Caller, Callee, Publisher and Subscriber at the same time. And Routers provide the fabric on top of which ITMP runs a symmetric application messaging service.
+
 ## 4.2. Remote Procedure Call Roles
+
 The Remote Procedure Call messaging pattern involves peers of two different roles:
-Callee
-Caller
+
+* Callee
+* Caller
+
 A Caller issues calls to remote procedures by providing the procedure URI and any arguments for the call. The Callee will execute the procedure using the supplied arguments to the call and return the result of the call to the Caller.
 The Caller and Callee will usually run application code, while the Broker works as a generic router for remote procedure calls decoupling Callers and Callees.
+
 ## 4.3. Publish & Subscribe Roles
-The Publish & Subscribe messaging pattern involves peers of three different roles:
-Subscriber
-Publisher
-A Publishers publishes events to topics by providing the topic URI and any payload for the event. Subscribers of the topic will receive the event together with the event payload.
-Subscribers subscribe to topics they are interested in with Brokers. Publishers initiate publication first at Brokers. Brokers route events incoming from Publishers to Subscribers that are subscribed to respective topics.
+
+The Publish & Subscribe messaging pattern involves peers of two different roles:
+
+* Subscriber
+* Publisher
+
+A Publishers publishes events to topics by providing the topic URI and any payload for the event. Subscribers of the topic will receive the event together with the event payload. Subscribers subscribe to topics they are interested. 
+
+Broker act both as Publisher for Subscribers and as Subscriber for Publishers at the same time. Brokers route events incoming from Publishers to Subscribers that are subscribed to respective topics.
+
 The Publisher and Subscriber will usually run application code, while the Broker works as a generic router for events decoupling Publishers from Subscribers.
+
 ## 4.4. Peers with multiple Roles
+
 Note that Peers might implement more than one role: e.g. a Peer might act as Caller, Publisher and Subscriber at the same time. Another Peer might act also as Broker.
+
 # 5. Building Blocks
+
 ITMP is defined with respect to the following building blocks
+
 1. Identifiers
 2. Serializations
 3. Transports
+
 For each building block, ITMP only assumes a defined set of requirements, which allows to run ITMP variants with different concrete bindings.
+
 ## 5.1. Identifiers
+
 ### 5.1.1. URIs
+
 ITMP needs to identify the following persistent resources:
 
 1. Topics
 2. Procedures
-3. Errors
+3. Interfaces
 
 These are identified in ITMP using Uniform Resource Identifiers (URIs) [RFC3986] that MUST be Unicode strings.
 When using JSON as ITMP serialization format, URIs (as other strings) are transmitted in UTF-8 [RFC3629] encoding.
@@ -98,9 +134,11 @@ _Examples_
 "com.myapp.mytopic1"
 "com.myapp.myprocedure1"
 The URIs are understood to form a single, global, hierarchical namespace for ITMP.
-The namespace is unified for topics, procedures and errors - these different resource types do NOT have separate namespaces.
+The namespace is unified for topics and procedures - these different resource types do NOT have separate namespaces.
 To avoid resource naming conflicts, the package naming convention from Java is used, where URIs SHOULD begin with (reversed) domain names owned by the organization defining the URI.
+
 #### 5.1.1.1. Relaxed/Loose URIs
+
 URI components (the parts between two "."s, the head part up to the first ".", the tail part after the last ".") MUST NOT contain a ".", "#" or whitespace characters and MUST NOT be empty (zero-length strings), except for whole URI that can be an empty string.
 The restriction not to allow "." in component strings is due to the fact that "." is used to separate components, and ITMP associates semantics with resource hierarchies, such as in pattern-based subscriptions. The restriction not to allow empty (zero-length) strings as components is due to the fact that this may be used to denote wildcard components with pattern-based subscriptions and registrations in the Advanced Profile. The character "#" is not allowed since this is reserved for internal use by Brokers.
 As an example, the following regular expression could be used in Python to check URIs according to the above rules:
@@ -113,7 +151,9 @@ When empty URI components are allowed (which is the case for specific messages t
 loose URI check allowing empty URI components
 pattern = re.compile(r"^(([^\s\.#]+\.)|\.)*([^\s\.#]+)?$")
 ```
+
 #### 5.1.1.2. Strict URIs
+
 While the above rules MUST be followed, following a stricter URI rule is recommended: URI components SHOULD only contain lower-case letters, digits and "_".
 As an example, the following regular expression could be used in Python to check URIs according to the above rules:
 ```
@@ -126,7 +166,9 @@ strict URI check allowing empty URI components
 pattern = re.compile(r"^(([0-9a-z_]+\.)|\.)*([0-9a-z_]+)?$")
 ```
 Following the suggested regular expression will make URI components valid identifiers in most languages (modulo URIs starting with a digit and language keywords) and the use of lower-case only will make those identifiers unique in languages that have case-insensitive identifiers. Following this suggestion can allow implementations to map topics, procedures and errors to the language environment in a completely transparent way.
+
 ### 5.1.2. IDs
+
 ITMP needs to identify the following ephemeral entities each in the scope noted:
 
 1. Sessions (_global scope_)
@@ -140,6 +182,7 @@ IDs in the _router scope_ can be chosen freely by the specific router implementa
 IDs in the _session scope_ SHOULD be incremented by 1 beginning with 1 (for each direction - _Client-to-Router_ and _Router-to-Client_)
 The reason to choose the specific upper bound is that 2^53 is the largest integer such that this integer and _all_ (positive) smaller integers can be represented exactly in IEEE-754 doubles. Some languages (e.g. JavaScript) use doubles as their sole number type. Most languages do have signed and unsigned 64-bit integer types that both can hold any value from the specified range.
 The following is a complete list of usage of IDs in the three categories for all ITMP messages. For a full definition of these see Section 6.
+
 #### 5.1.2.1. Global Scope IDs
 
 * "CONNECTED.Session"
@@ -157,6 +200,7 @@ The following is a complete list of usage of IDs in the three categories for all
 * "CALL.Request"
 
 ## 5.2. Serializations
+
 ITMP is a message based protocol that requires serialization of messages to octet sequences to be sent out on the wire.
 A message serialization format is assumed that (at least) provides the following types:
 
@@ -240,7 +284,7 @@ Here is an example message conforming to the above format
 
 ## 6.1. Extensibility
 
-Some ITMP messages contain "Options|dict" or "Details|dict" elements. This allows for future extensibility and implementations that only provide subsets of functionality by ignoring unimplemented attributes. Keys in "Options" and "Details" MUST be of type "string" and MUST match the regular expression "[a-z][a-z0-9_]{2,}" for ITMP predefined keys. Implementations MAY use implementation-specific keys that MUST match the regular expression "_[a-z0-9_]{3,}". Attributes unknown to an implementation MUST be ignored.
+Some ITMP messages contain "Options|dict" or "Details|dict" elements. This allows for future extensibility and implementations that only provide subsets of functionality by ignoring unimplemented attributes. Keys in "Options" and "Details" MUST be of type "string" and MUST match the regular expression "[a-z][a-z0-9_]{2,}" for ITMP predefined keys. Implementations MAY use implementation-specific keys that MUST match the regular expression "[a-z0-9_]{3,}". Attributes unknown to an implementation MUST be ignored.
 
 ## 6.2. Polymorphism
 
@@ -385,36 +429,36 @@ Result of a call as returned to Caller if the error occur during call execution.
 
 ```
 Connection
-0	[CONNECT, "fireguard",{"roles":{"pub":{}}}]	opened connection
-1	[CONNECTED, 3245,{"roles":{"sub":{}}}]	confirm connection
-2	[ABORT, 503,"time out"]	terminate connection
-3	[DISCONNECT, 503,"time out"]	 
+0	[CONNECT, Realm|uri, Details|dict]	open connection
+1	[CONNECTED, Session|id, Details|dict]	confirm connection
+2	[ABORT, Code|integer, Reason|string, Details|dict]	terminate connection
+3	[DISCONNECT, Code|integer, Reason|string, Details|dict]	 clear finish connection
 Information
 4	[KEEP_ALIVE]	keep alive
-5	[ERROR, id, 503,"time out"]	error notificarion 
+5	[ERROR, Request|id, Code|integer, Reason|string, Details|dict]	error notificarion 
 Description
-6	[DESCRIBE, id, "name"]	get description
-7	[DESCRIPTION, id, ["name&int"]]	description response
+6	[DESCRIBE, Request|id, Topic|uri, Options|dict]	get description
+7	[DESCRIPTION, DESCRIBE.Request|id, description|list, Options|dict]	description response
 RPC
-8	[CALL, id, "name", [1,2]]	call
-9	[RESULT, id, ["ok","result"]]	call response
+8	[CALL, Request|id, Procedure|uri, Arguments, Options|dict]	call
+9	[RESULT, CALL.Request|id, Result, Details|dict]	call response
 RPC Extended
-10	[ARGUMENTS, id, [1,2]]	additional arguments for call
-11	[PROGRESS, id, [2,"almost done"]]	call in progress
-12	[CANCEL, id]	call cancel
+10	[ARGUMENTS, CALL.Request|id, Arguments, Options|dict]	additional arguments for call
+11	[PROGRESS, CALL.Request|id, Result, Details|dict]	call in progress
+12	[CANCEL, CALL.Request|id, Details|dict]	call cancel
 publish
-13	[EVENT, id, "alarm", [32,"12:33"]]	event
-14	[PUBLISH, id, "alarm", [32,"12:33"]]	event with acknowledge awaiting
-15	[PUBLISHED, id]	event acknowledged
+13	[EVENT, Request|id, Topic|uri, Arguments, Options|dict]	event
+14	[PUBLISH, Request|id, Topic|uri, Arguments, Options|dict]	event with acknowledge awaiting
+15	[PUBLISHED, Request|id, Publication|id, Options|dict]	event acknowledged
 subscribe
-16	[SUBSCRIBE, id, "alarm"]	subscribe
-17	[SUBSCRIBED, id, SUBSCRIPTION.id]	subscription confirmed
-18	[UNSUBSCRIBE, id, "alarm"]
-[UNSUBSCRIBE, id, SUBSCRIPTION.id]	unsibscribe
-19	[UNSUBSCRIBED, id]	 
+16	[SUBSCRIBE, SUBSCRIBE.Request|id, Topic|uri, Options|dict]	subscribe
+17	[SUBSCRIBED, Request|id, SubscriptionId|id, Options|dict]	subscription confirmed
+18  [UNSUBSCRIBE, Request|id, Topic|uri, Options|dict]
+19	[UNSUBSCRIBE, Request|id, SUBSCRIBED.SubscriptionId|id, Options|dict]	unsibscribe
+20	[UNSUBSCRIBED, UNSUBSCRIBE.Request|id, Options|dict]
 subscribe
-20	[ANOUNCE, id, "name",["name&int"]]	announce interface or event
-21	[ACCEPTED, id,]	accept announcement
+21	[ANOUNCE, Request|id, Topic|uri, description|list, Options|dict]	announce interface or event
+22	[ACCEPTED, ANOUNCE.Request|id, Options|dict]	accept announcement
 ```
 
 ## 6.6. Extension Messages
