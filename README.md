@@ -427,39 +427,40 @@ Result of a call as returned to Caller if the error occur during call execution.
 
 ### 6.4.4. List of all messages and codes
 
-```
-Connection
-0	[CONNECT, Realm|uri, Details|dict]	open connection
-1	[CONNECTED, Session|id, Details|dict]	confirm connection
-2	[ABORT, Code|integer, Reason|string, Details|dict]	terminate connection
-3	[DISCONNECT, Code|integer, Reason|string, Details|dict]	 clear finish connection
-Information
-4	[KEEP_ALIVE]	keep alive
-5	[ERROR, Request|id, Code|integer, Reason|string, Details|dict]	error notificarion 
-Description
-6	[DESCRIBE, Request|id, Topic|uri, Options|dict]	get description
-7	[DESCRIPTION, DESCRIBE.Request|id, description|list, Options|dict]	description response
-RPC
-8	[CALL, Request|id, Procedure|uri, Arguments, Options|dict]	call
-9	[RESULT, CALL.Request|id, Result, Details|dict]	call response
-RPC Extended
-10	[ARGUMENTS, CALL.Request|id, Arguments, Options|dict]	additional arguments for call
-11	[PROGRESS, CALL.Request|id, Result, Details|dict]	call in progress
-12	[CANCEL, CALL.Request|id, Details|dict]	call cancel
-publish
-13	[EVENT, Request|id, Topic|uri, Arguments, Options|dict]	event
-14	[PUBLISH, Request|id, Topic|uri, Arguments, Options|dict]	event with acknowledge awaiting
-15	[PUBLISHED, Request|id, Publication|id, Options|dict]	event acknowledged
-subscribe
-16	[SUBSCRIBE, SUBSCRIBE.Request|id, Topic|uri, Options|dict]	subscribe
-17	[SUBSCRIBED, Request|id, SubscriptionId|id, Options|dict]	subscription confirmed
-18  [UNSUBSCRIBE, Request|id, Topic|uri, Options|dict]
-19	[UNSUBSCRIBE, Request|id, SUBSCRIBED.SubscriptionId|id, Options|dict]	unsibscribe
-20	[UNSUBSCRIBED, UNSUBSCRIBE.Request|id, Options|dict]
-subscribe
-21	[ANOUNCE, Request|id, Topic|uri, description|list, Options|dict]	announce interface or event
-22	[ACCEPTED, ANOUNCE.Request|id, Options|dict]	accept announcement
-```
+
+| code | Format | desc |
+| ---- | ----------- | -------- |
+| | Connection
+| 0 | [CONNECT, Realm\|uri, Details\|dict] | open connection |
+| 1 | [CONNECTED, Session\|id, Details\|dict] | confirm connection
+| 2 | [ABORT, Code\|integer, Reason\|string, Details\|dict] | terminate connection
+| 3 | [DISCONNECT, Code\|integer, Reason\|string, Details\|dict] |  clear finish connection
+| | Information
+| 4 | [KEEP_ALIVE]	keep alive
+| 5 | [ERROR, Request\|id, Code\|integer, Reason\|string, Details\|dict] | error notificarion 
+| | Description
+| 6 | [DESCRIBE, Request\|id, Topic\|uri, Options\|dict] | get description
+| 7 | [DESCRIPTION, DESCRIBE.Request\|id, description\|list, Options\|dict] | description response
+| | RPC
+| 8 | [CALL, Request\|id, Procedure\|uri, Arguments, Options\|dict] | call
+| 9 | [RESULT, CALL.Request\|id, Result, Details\|dict] | call response
+|  | RPC Extended
+| 10 | [ARGUMENTS, CALL.Request\|id, Arguments, Options\|dict] | additional arguments for call
+| 11 | [PROGRESS, CALL.Request\|id, Result, Details\|dict] | call in progress
+| 12 | [CANCEL, CALL.Request\|id, Details\|dict] | call cancel
+| | publish
+| 13 | [EVENT, Request\|id, Topic\|uri, Arguments, Options\|dict] | event
+| 14 | [PUBLISH, Request\|id, Topic\|uri, Arguments, Options\|dict] | event with acknowledge awaiting
+| 15 | [PUBLISHED, Request\|id, Publication\|id, Options\|dict] | event acknowledged
+| | subscribe
+| 16 | [SUBSCRIBE, SUBSCRIBE.Request\|id, Topic\|uri, Options\|dict] | subscribe
+| 17 | [SUBSCRIBED, Request\|id, SubscriptionId\|id, Options\|dict] | subscription confirmed
+| 18 | [UNSUBSCRIBE, Request\|id, Topic\|uri, Options\|dict]
+| 19 | [UNSUBSCRIBE_BY_ID, Request\|id, SUBSCRIBED.SubscriptionId\|id, Options\|dict] | unsibscribe
+| 20 | [UNSUBSCRIBED, UNSUBSCRIBE.Request\|id, Options\|dict]
+|  | subscribe
+| 21 | [ANOUNCE, Request\|id, Topic\|uri, description\|list, Options\|dict] | announce interface or event
+| 22 | [ACCEPTED, ANOUNCE.Request\|id, Options\|dict] | accept announcement
 
 ## 6.6. Extension Messages
 
