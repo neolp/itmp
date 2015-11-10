@@ -1076,11 +1076,20 @@ A _Dealer_ could not perform a call, since a procedure with the given URI is reg
 | `[DESCRIBE, 0, ""]` | ```[DESCRIPTION, 0, ["FireGuard`Fire Alarm and automatic Destiguishing board%1.0.10.435#231268834874553@NSC Communication Siberia`:Node,Fireguard","getState&s(s)","StateChanged!ss"] ]``` |
 | `[DESCRIBE, 1, "getState"]` | ```[DESCRIPTION, 1, ["getState`Get Area State`&s`Area state`(s`Area name`)"] ]``` |
 | `[DESCRIBE, 2, "getState"]` | ```[DESCRIPTION, 2, ["StateChanged`Inform about new state of area`!s`Area name`s`Area state`"] ]``` |
-| `[CALL, 3, "getState", ["Area1"] ]` | ```[RESULT, 3, ["Norm"]``` |
-| `-` | ```[EVENT, 0, "StateChanged" ["Area1","Alarm"]``` |
-| `-` | ```[PUBLISH, 1, "StateChanged" ["Area1","Norm"]``` |
+| `[CALL, 3, "getState", ["Area1"] ]` | ```[RESULT, 3, ["Norm"]]``` |
+| `-` | ```[EVENT, 0, "StateChanged" ["Area1","Alarm"]]``` |
+| `-` | ```[PUBLISH, 1, "StateChanged" ["Area1","Norm"]]``` |
 | `[PUBLISHED,1]` | `-` |
 
+## 12.2  Temperature sensor example
+
+| Sensor Send | Server send |
+| --- | --- |
+| ```[ANOUNCE, 0, "",["TemperatureSensor`Smart Termometer%1.0#A2DF31CD@NSC Communication Siberia`:Sensor","getTemp&i`Temperature$degrees`()","Temp!s`My ID`i`Temperature$degrees`"] ]"]``` | ```[ACCEPTED, 0]``` |
+| `-` | ```[SUBSCRIBE, 0, ["Temp"] ]``` |
+| `[SUBSCRIBED, 0, 0]` | `-` |
+| ```[EVENT, 0, "Temp" ["A2DF31CD",24]``` | `-`
+| ```[PUBLISH, 1, "Temp" ["A2DF31CD",23]``` | `[PUBLISHED,1]` |
 
 # 13. Ordering Guarantees
 
