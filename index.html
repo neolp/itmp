@@ -949,6 +949,57 @@ Similar to what browsers do with the "User-Agent" HTTP header, both the "CONNECT
 }]
 </code></pre>
 
+<h2>
+<a id="81-node-description" class="anchor" href="#81-node-description" aria-hidden="true"><span class="octicon octicon-link"></span></a>8.1 Node description</h2>
+
+<pre><code>&lt;field description&gt; ::= &lt;name&gt;&lt;description&gt;&lt;signature&gt;
+&lt;name&gt; ::= string
+&lt;signature&gt; ::= &lt;interface&gt; | &lt;func&gt; | &lt;event&gt; | &lt;container&gt;
+&lt;interface&gt; ::= ':' [ &lt;interface name&gt; [ , &lt;interface name&gt; ] ]
+&lt;interface name&gt; ::= string
+&lt;container&gt; ::= '*' [ &lt;interface name&gt; [ , &lt;interface name&gt; ] ]
+&lt;func&gt; ::= '&amp;' &lt;return type list&gt; [ ‘(‘ &lt;argument type list&gt; ’)’ ]
+&lt;event&gt; ::= '!' &lt;type list&gt;
+&lt;return type list&gt; ::= &lt;type list&gt;
+&lt;argument type list&gt; ::= &lt;type list&gt;
+&lt;type list&gt; ::= [ &lt;type&gt; [ , &lt;type&gt; ] ]
+&lt;type&gt; ::= &lt;simple type&gt; | '['&lt;type list&gt;']' | '{' &lt;prop name&gt; [ '?' ] : &lt;type&gt; [ , &lt;prop name&gt; : &lt;type&gt; ] '}'
+&lt;simple type&gt; ::= &lt;type char&gt; [&lt;description&gt;]
+&lt;description&gt;::='`' [&lt;name&gt;] [&lt;version&gt;] [&lt;UniqueId&gt;] [&lt;units&gt;] [&lt;variants&gt;] [&lt;manufacturer&gt;] '`'
+&lt;version&gt;::=’%’ string
+&lt;UniqueId&gt;::=’#’ string
+&lt;units&gt; ::= '$' string
+&lt;variants&gt; ::= '&lt;' &lt;value&gt; [ , &lt;value&gt; ] '&gt;'
+&lt;manufacturer&gt; ::= '@' string
+&lt;type char&gt; ::= i | s | b | f | B | N | Q | I | U | X | T | F | D | S
+</code></pre>
+
+<p>simple type JSON and CBOR encoded</p>
+
+<ul>
+<li>i integer</li>
+<li>s  UTF-8 string</li>
+<li>b boolean</li>
+<li>f  floating point number</li>
+</ul>
+
+<p>fixed types JSON BASE64 string or CBOR byte array encoded as sequence (for small controllers without complex encoders)</p>
+
+<ul>
+<li>B  8-bit unsigned integer (byte)</li>
+<li>N  16-bit signed integer</li>
+<li>Q  16-bit unsigned integer</li>
+<li>I  32-bit signed integer</li>
+<li>U  32-bit unsigned integer</li>
+<li>X  64-bit signed integer</li>
+<li>T  64-bit unsigned integer</li>
+<li>F  single-precision floating point (IEEE 754)</li>
+<li>D  double-precision floating point (IEEE 754)</li>
+<li>S  UTF-8 string with length prefix</li>
+</ul>
+
+<p>any sequence of primitive typed values encoded as byte array or base64 encoded string for json</p>
+
 <h1>
 <a id="9-publish-and-subscribe" class="anchor" href="#9-publish-and-subscribe" aria-hidden="true"><span class="octicon octicon-link"></span></a>9. Publish and Subscribe</h1>
 
@@ -1339,13 +1390,58 @@ A <em>Dealer</em> could not perform a call, since a procedure with the given URI
 403 no eligible callee</p>
 
 <h1>
-<a id="12-ordering-guarantees" class="anchor" href="#12-ordering-guarantees" aria-hidden="true"><span class="octicon octicon-link"></span></a>12. Ordering Guarantees</h1>
+<a id="12-examples" class="anchor" href="#12-examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>12. Examples</h1>
+
+<h2>
+<a id="121--simple-example" class="anchor" href="#121--simple-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>12.1  Simple example</h2>
+
+<table>
+<thead>
+<tr>
+<th>Client Send</th>
+<th>Server send</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[DESCRIBE, 0, ""]</code></td>
+<td><code>[DESCRIPTION, 0, ["FireGuard`Fire Alarm and automatic Destiguishing board%1.0.10.435#231268834874553@NSC Communication Siberia`:Node,Fireguard","getState&amp;s(s)","StateChanged!ss"] ]</code></td>
+</tr>
+<tr>
+<td><code>[DESCRIBE, 1, "getState"]</code></td>
+<td><code>[DESCRIPTION, 1, ["getState`Get Area State`&amp;s`Area state`(s`Area name`)"] ]</code></td>
+</tr>
+<tr>
+<td><code>[DESCRIBE, 2, "getState"]</code></td>
+<td><code>[DESCRIPTION, 2, ["StateChanged`Inform about new state of area`!s`Area name`s`Area state`"] ]</code></td>
+</tr>
+<tr>
+<td><code>[CALL, 3, "getState", ["Area1"] ]</code></td>
+<td><code>[RESULT, 3, ["Norm"]</code></td>
+</tr>
+<tr>
+<td><code>-</code></td>
+<td><code>[EVENT, 0, "StateChanged" ["Area1","Alarm"]</code></td>
+</tr>
+<tr>
+<td><code>-</code></td>
+<td><code>[PUBLISH, 1, "StateChanged" ["Area1","Norm"]</code></td>
+</tr>
+<tr>
+<td><code>[PUBLISHED,1]</code></td>
+<td><code>-</code></td>
+</tr>
+</tbody>
+</table>
+
+<h1>
+<a id="13-ordering-guarantees" class="anchor" href="#13-ordering-guarantees" aria-hidden="true"><span class="octicon octicon-link"></span></a>13. Ordering Guarantees</h1>
 
 <p>All ITMP implementations, in particular Routers MUST support the following ordering guarantees.
 A ITMP Advanced Profile may provide applications options to relax ordering guarantees, in particular with distributed calls.</p>
 
 <h2>
-<a id="121-publish--subscribe-ordering" class="anchor" href="#121-publish--subscribe-ordering" aria-hidden="true"><span class="octicon octicon-link"></span></a>12.1. Publish &amp; Subscribe Ordering</h2>
+<a id="131-publish--subscribe-ordering" class="anchor" href="#131-publish--subscribe-ordering" aria-hidden="true"><span class="octicon octicon-link"></span></a>13.1. Publish &amp; Subscribe Ordering</h2>
 
 <p>Regarding <em>Publish &amp; Subscribe</em>, the ordering guarantees are as follows:
 If <em>Subscriber A</em> is subscribed to both <em>Topic 1</em> and <em>Topic 2</em>, and <em>Publisher B</em> first publishes an <em>Event 1</em> to <em>Topic 1</em> and then an <em>Event 2</em> to <em>Topic 2</em>, then <em>Subscriber A</em> will first receive <em>Event 1</em> and then <em>Event 2</em>. This also holds if <em>Topic 1</em> and <em>Topic 2</em> are identical.
@@ -1354,7 +1450,7 @@ Further, if <em>Subscriber A</em> subscribes to <em>Topic 1</em>, the "SUBSCRIBE
 There is no guarantee regarding the order of return for multiple subsequent subscribe requests. A subscribe request might require the <em>Broker</em> to do a time-consuming lookup in some database, whereas another subscribe request second might be permissible immediately.</p>
 
 <h2>
-<a id="122-remote-procedure-call-ordering" class="anchor" href="#122-remote-procedure-call-ordering" aria-hidden="true"><span class="octicon octicon-link"></span></a>12.2. Remote Procedure Call Ordering</h2>
+<a id="132-remote-procedure-call-ordering" class="anchor" href="#132-remote-procedure-call-ordering" aria-hidden="true"><span class="octicon octicon-link"></span></a>13.2. Remote Procedure Call Ordering</h2>
 
 <p>Regarding <em>Remote Procedure Calls</em>, the ordering guarantees are as follows:
 If <em>Callee A</em> has registered endpoints for both <em>Procedure 1</em> and <em>Procedure 2</em>, and <em>Caller B</em> first issues a <em>Call 1</em> to <em>Procedure 1</em> and then a <em>Call 2</em> to <em>Procedure 2</em>, and both calls are routed to <em>Callee A</em>, then <em>Callee A</em> will first receive an invocation corresponding to <em>Call 1</em> and then <em>Call 2</em>. This also holds if <em>Procedure 1</em> and <em>Procedure 2</em> are identical.
@@ -1362,12 +1458,12 @@ In other words, ITMP guarantees ordering of invocations between any given <em>pa
 There are no guarantees on the order of call results and errors in relation to <em>different</em> calls, since the execution of calls upon different invocations of endpoints in Callees are running independently. A first call might require an expensive, long-running computation, whereas a second, subsequent call might finish immediately.</p>
 
 <h1>
-<a id="13-security-model" class="anchor" href="#13-security-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>13. Security Model</h1>
+<a id="14-security-model" class="anchor" href="#14-security-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>14. Security Model</h1>
 
 <p>The following discusses the security model for the Basic Profile. Any changes or extensions to this for the Advanced Profile are discussed further on as part of the Advanced Profile definition.</p>
 
 <h2>
-<a id="131-transport-encryption-and-integrity" class="anchor" href="#131-transport-encryption-and-integrity" aria-hidden="true"><span class="octicon octicon-link"></span></a>13.1. Transport Encryption and Integrity</h2>
+<a id="141-transport-encryption-and-integrity" class="anchor" href="#141-transport-encryption-and-integrity" aria-hidden="true"><span class="octicon octicon-link"></span></a>14.1. Transport Encryption and Integrity</h2>
 
 <p>ITMP transports may provide (optional) transport-level encryption and integrity verification. If so, encryption and integrity is point-to- point: between a Client and the Router it is connected to.
 Transport-level encryption and integrity is solely at the transport- level and transparent to ITMP. ITMP itself deliberately does not specify any kind of transport-level encryption.
@@ -1376,7 +1472,7 @@ ITMP deployments are encouraged to stick to a TLS-only policy with the TLS code 
 Further, when a Client connects to a Router over a local-only transport such as Unix domain sockets, the integrity of the data transmitted is implicit (the OS kernel is trusted), and the privacy of the data transmitted can be assured using file system permissions (no one can tap a Unix domain socket without appropriate permissions or being root).</p>
 
 <h2>
-<a id="132-router-authentication" class="anchor" href="#132-router-authentication" aria-hidden="true"><span class="octicon octicon-link"></span></a>13.2. Router Authentication</h2>
+<a id="142-router-authentication" class="anchor" href="#142-router-authentication" aria-hidden="true"><span class="octicon octicon-link"></span></a>14.2. Router Authentication</h2>
 
 <p>To authenticate Routers to Clients, deployments MUST run TLS and Clients MUST verify the Router server certificate presented. ITMP itself does not provide mechanisms to authenticate a Router (only a Client).
 The verification of the Router server certificate can happen</p>
@@ -1390,13 +1486,13 @@ The verification of the Router server certificate can happen</p>
 <p>Further, when a Client connects to a Router over a local-only transport such as Unix domain sockets, the file system permissions can be used to create implicit trust. E.g. if only the OS user under which the Router runs has the permission to create a Unix domain socket under a specific path, Clients connecting to that path can trust in the router authenticity.</p>
 
 <h2>
-<a id="133-client-authentication" class="anchor" href="#133-client-authentication" aria-hidden="true"><span class="octicon octicon-link"></span></a>13.3. Client Authentication</h2>
+<a id="143-client-authentication" class="anchor" href="#143-client-authentication" aria-hidden="true"><span class="octicon octicon-link"></span></a>14.3. Client Authentication</h2>
 
 <p>Authentication of a Client to a Router at the ITMP level is not part of the basic profile.
 When running over TLS, a Router MAY authenticate a Client at the transport level by doing a <em>client certificate based authentication</em>.</p>
 
 <h3>
-<a id="1331-routers-are-trusted" class="anchor" href="#1331-routers-are-trusted" aria-hidden="true"><span class="octicon octicon-link"></span></a>13.3.1. Routers are trusted</h3>
+<a id="1431-routers-are-trusted" class="anchor" href="#1431-routers-are-trusted" aria-hidden="true"><span class="octicon octicon-link"></span></a>14.3.1. Routers are trusted</h3>
 
 <p>Routers are <em>trusted</em> by Clients.
 In particular, Routers can read (and modify) any application payload transmitted in events, calls, call results and call errors.
