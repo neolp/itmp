@@ -1082,12 +1082,12 @@ A _Dealer_ could not perform a call, since a procedure with the given URI is reg
 | `[PUBLISHED,1]` | `-` |
 
 
-# 12. Ordering Guarantees
+# 13. Ordering Guarantees
 
 All ITMP implementations, in particular Routers MUST support the following ordering guarantees.
 A ITMP Advanced Profile may provide applications options to relax ordering guarantees, in particular with distributed calls.
 
-## 12.1. Publish & Subscribe Ordering
+## 13.1. Publish & Subscribe Ordering
 
 Regarding *Publish & Subscribe*, the ordering guarantees are as follows:
 If _Subscriber A_ is subscribed to both *Topic 1* and *Topic 2*, and _Publisher B_ first publishes an *Event 1* to *Topic 1* and then an *Event 2* to *Topic 2*, then _Subscriber A_ will first receive *Event 1* and then *Event 2*. This also holds if *Topic 1* and *Topic 2* are identical.
@@ -1095,18 +1095,18 @@ In other words, ITMP guarantees ordering of events between any given _pair_ of P
 Further, if _Subscriber A_ subscribes to *Topic 1*, the "SUBSCRIBED" message will be sent by the _Broker_ to _Subscriber A_ before any "EVENT" message for *Topic 1*.
 There is no guarantee regarding the order of return for multiple subsequent subscribe requests. A subscribe request might require the _Broker_ to do a time-consuming lookup in some database, whereas another subscribe request second might be permissible immediately.
 
-## 12.2. Remote Procedure Call Ordering
+## 13.2. Remote Procedure Call Ordering
 
 Regarding *Remote Procedure Calls*, the ordering guarantees are as follows:
 If _Callee A_ has registered endpoints for both *Procedure 1* and *Procedure 2*, and _Caller B_ first issues a *Call 1* to *Procedure 1* and then a *Call 2* to *Procedure 2*, and both calls are routed to _Callee A_, then _Callee A_ will first receive an invocation corresponding to *Call 1* and then *Call 2*. This also holds if *Procedure 1* and *Procedure 2* are identical.
 In other words, ITMP guarantees ordering of invocations between any given _pair_ of Caller and Callee.
 There are no guarantees on the order of call results and errors in relation to _different_ calls, since the execution of calls upon different invocations of endpoints in Callees are running independently. A first call might require an expensive, long-running computation, whereas a second, subsequent call might finish immediately.
 
-# 13. Security Model
+# 14. Security Model
 
 The following discusses the security model for the Basic Profile. Any changes or extensions to this for the Advanced Profile are discussed further on as part of the Advanced Profile definition.
 
-## 13.1. Transport Encryption and Integrity
+## 14.1. Transport Encryption and Integrity
 
 ITMP transports may provide (optional) transport-level encryption and integrity verification. If so, encryption and integrity is point-to- point: between a Client and the Router it is connected to.
 Transport-level encryption and integrity is solely at the transport- level and transparent to ITMP. ITMP itself deliberately does not specify any kind of transport-level encryption.
@@ -1114,7 +1114,7 @@ Implementations that offer TCP based transport such as ITMP-over- WebSocket or I
 ITMP deployments are encouraged to stick to a TLS-only policy with the TLS code and setup being hardened.
 Further, when a Client connects to a Router over a local-only transport such as Unix domain sockets, the integrity of the data transmitted is implicit (the OS kernel is trusted), and the privacy of the data transmitted can be assured using file system permissions (no one can tap a Unix domain socket without appropriate permissions or being root).
 
-## 13.2. Router Authentication
+## 14.2. Router Authentication
 
 To authenticate Routers to Clients, deployments MUST run TLS and Clients MUST verify the Router server certificate presented. ITMP itself does not provide mechanisms to authenticate a Router (only a Client).
 The verification of the Router server certificate can happen
@@ -1125,12 +1125,12 @@ The verification of the Router server certificate can happen
 
 Further, when a Client connects to a Router over a local-only transport such as Unix domain sockets, the file system permissions can be used to create implicit trust. E.g. if only the OS user under which the Router runs has the permission to create a Unix domain socket under a specific path, Clients connecting to that path can trust in the router authenticity.
 
-## 13.3. Client Authentication
+## 14.3. Client Authentication
 
 Authentication of a Client to a Router at the ITMP level is not part of the basic profile.
 When running over TLS, a Router MAY authenticate a Client at the transport level by doing a _client certificate based authentication_.
 
-### 13.3.1. Routers are trusted
+### 14.3.1. Routers are trusted
 
 Routers are _trusted_ by Clients.
 In particular, Routers can read (and modify) any application payload transmitted in events, calls, call results and call errors.
