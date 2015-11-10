@@ -1417,19 +1417,53 @@ A <em>Dealer</em> could not perform a call, since a procedure with the given URI
 </tr>
 <tr>
 <td><code>[CALL, 3, "getState", ["Area1"] ]</code></td>
-<td><code>[RESULT, 3, ["Norm"]</code></td>
+<td><code>[RESULT, 3, ["Norm"]]</code></td>
 </tr>
 <tr>
 <td><code>-</code></td>
-<td><code>[EVENT, 0, "StateChanged" ["Area1","Alarm"]</code></td>
+<td><code>[EVENT, 0, "StateChanged" ["Area1","Alarm"]]</code></td>
 </tr>
 <tr>
 <td><code>-</code></td>
-<td><code>[PUBLISH, 1, "StateChanged" ["Area1","Norm"]</code></td>
+<td><code>[PUBLISH, 1, "StateChanged" ["Area1","Norm"]]</code></td>
 </tr>
 <tr>
 <td><code>[PUBLISHED,1]</code></td>
 <td><code>-</code></td>
+</tr>
+</tbody>
+</table>
+
+<h2>
+<a id="122--temperature-sensor-example" class="anchor" href="#122--temperature-sensor-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>12.2  Temperature sensor example</h2>
+
+<table>
+<thead>
+<tr>
+<th>Sensor Send</th>
+<th>Server send</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[ANOUNCE, 0, "",["TemperatureSensor`Smart Termometer%1.0#A2DF31CD@NSC Communication Siberia`:Sensor","getTemp&amp;i`Temperature$degrees`()","Temp!s`My ID`i`Temperature$degrees`"] ]"]</code></td>
+<td><code>[ACCEPTED, 0]</code></td>
+</tr>
+<tr>
+<td><code>-</code></td>
+<td><code>[SUBSCRIBE, 0, ["Temp"] ]</code></td>
+</tr>
+<tr>
+<td><code>[SUBSCRIBED, 0, 0]</code></td>
+<td><code>-</code></td>
+</tr>
+<tr>
+<td><code>[EVENT, 0, "Temp" ["A2DF31CD",24]</code></td>
+<td><code>-</code></td>
+</tr>
+<tr>
+<td><code>[PUBLISH, 1, "Temp" ["A2DF31CD",23]</code></td>
+<td><code>[PUBLISHED,1]</code></td>
 </tr>
 </tbody>
 </table>
