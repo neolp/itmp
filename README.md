@@ -1031,41 +1031,109 @@ _Example_
 
 ITMP pre-defines the following error codes. ITMP peers MUST use only the defined error messages.
 
+* 400 Bad Request
+* 401 Unauthorized
+* 403 Forbidden
+* 404 Not Found
+* 405 Method Not Allowed
+* 406 Not Acceptable
+* 413 Request Entity Too Large
+* 414 Request-URI Too Large
+* 418 I'm a teapot
+* 429 Too Many Requests
+* 419 Format error
+* 420 Type error
+* 421 Reserved...
+
+* 500 Internal Server Error
+* 501 Not Implemented
+* 507 Insufficient Storage
+
+
 ### 11.1.1. 400 Bad request
 
-When a Peer provides an incorrect URI for any URI-based attribute of a ITMP message (e.g. realm, topic), then the other Peer MUST respond with an "ERROR" message and give the following 400:
-11.1.2. Interaction
-Peer provided an incorrect URI for any URI-based attribute of ITMP message, such as realm, topic or procedure
-400 Bad Request.
-A Dealer could not perform a call, since no procedure is currently registered under the given URI.
-404 Not Found
-A Broker could not perform an unsubscribe, since the given subscription is not active.
-404 Not Found 
-A call failed since the given argument types or values are not acceptable to the called procedure. In this case the Callee may throw this error. Alternatively a Router may throw this error if it performed _payload validation_ of a call, call result, call error or publish, and the payload did not conform to the requirements.
-512 Bag argument
+When a Peer provides an incorrect URI for any URI-based attribute of a ITMP message (e.g. realm, topic), then the other Peer MUST respond with an "ERROR" message and give the code 400 for such requests
 
-### 11.1.3. Session Close
+### 11.1.2. 401 Unauthorized
+
+When a Peer needs authorization they MUST respond with an "ERROR" message and give the code 401 for any requests except CONNECT
+A join, call, register, publish or subscribe failed, since the Peer is not authorized to perform the operation.
+
+A Dealer or Broker could not determine if the Peer is authorized to perform a join, call, register, publish or subscribe, since the authorization operation _itself_ failed. E.g. a custom authorizer did run into an error.
+
+### 11.1.3. 403 Forbidden
+
+When a Peer restrict using some methodta or arguments they MUST respond with an "ERROR" message and give the code 403 for any requests that violate restrictions
+
+### 11.1.4. 404 Not Found
+
+A Node could not perform a call or other action, since no procedure is currently registered under the given URI.
+
+### 11.1.5. 405 Method Not Allowed
+
+A Node could not perform a call or other action, since type of uri is not intended to called function (for example CALL for event uri).
+
+### 11.1.6. 406 Not Acceptable
+
+A Node could not perform a call or other action, since type of uri is not intended to called function (for example CALL for event uri).
+
+### 11.1.7. 413 Request Entity Too Large
+
+A Node could not perform a call or other action, since message is too large.
+
+### 11.1.8. 414 Request-URI Too Large
+
+A Node could not perform a call or other action, since message is too large.
+
+### 11.1.9. 418 I'm a teapot
+
+A Node is teapot.
+
+### 11.1.10. 429 Too Many Requests
+
+A Node could not perform a call or other action, since message is coming to fast.
+
+### 11.1.11. 419 Format error
+
+A Node could not perform a call or other action, since message has bad format.
+
+### 11.1.12. 420 Type error
+
+A Node could not perform a call or other action, since message components has bad type.
+
+### 11.1.13. 421 Reserved...
+
+reserved code
+
+### 11.1.14. 500 Internal Server Error
+
+A Node could not perform a call or other action, since internel error.
+
+### 11.1.15. 501 Not Implemented
+
+A Node could not perform a call or other action, since call is not implemented.
+
+### 11.1.16. 507 Insufficient Storage
+
+A Node could not perform a call or other action, since no storage space.
+
+### 11.1.17. 512 Bag argument
+
+A call failed since the given argument types or values are not acceptable to the called procedure. In this case the Callee may throw this error. Alternatively a Router may throw this error if it performed _payload validation_ of a call, call result or publish, and the payload did not conform to the requirements.
+
+### 11.1.18. 513 Session Close
 
 The Peer is shutting down completely - used as a "DISCONNECT" (or "ABORT") reason.
-513 system shutdown
-The Peer want to leave the realm - used as a "DISCONNECT" reason.
-514 close realm
+
+### 11.1.19. 513 system shutdown
+
+The Peer is shutting down completely - used as a "DISCONNECT" (or "ABORT") reason.
+
+### 11.1.21. 514 close realm
+
 A Peer acknowledges ending of a session - used as a "DISCONNECT" reply reason.
-202 goodbye and out
 
-### 11.1.4. Authorization
-
-A join, call, register, publish or subscribe failed, since the Peer is not authorized to perform the operation.
-401 not authorized
-A Dealer or Broker could not determine if the Peer is authorized to perform a join, call, register, publish or subscribe, since the authorization operation _itself_ failed. E.g. a custom authorizer did run into an error.
-401 authorization failed
-Peer wanted to join a non-existing realm (and the Router did not allow to auto-create the realm).
-404 no such realm
-
-A _Peer_ requested an interaction with an option that was disallowed by the _Router_
-405 option not allowed
-A _Dealer_ could not perform a call, since a procedure with the given URI is registered, but _Callee Black- and Whitelisting_ and/or _Caller Exclusion_ lead to the exclusion of (any) _Callee_ providing the procedure.
-403 no eligible callee
+### 11.1.22. 202 goodbye and out
 
 # 12. Examples
 
