@@ -445,8 +445,8 @@ Result of a call as returned to Caller if the error occur during call execution.
 | 8 | [CALL, Request\|id, Procedure\|uri, Arguments, Options\|dict] | call
 | 9 | [RESULT, CALL.Request\|id, Result, Details\|dict] | call response
 |  | RPC Extended
-| 10 | [ARGUMENTS, CALL.Request\|id, Arguments, Options\|dict] | additional arguments for call
-| 11 | [PROGRESS, CALL.Request\|id, Result, Details\|dict] | call in progress
+| 10 | [ARGUMENTS, CALL.Request\|id, ARGUMENTS.Sequuence\|integer, Arguments, Options\|dict] | additional arguments for call
+| 11 | [PROGRESS, CALL.Request\|id, PROGRESS.Sequuence\|integer, Result, Details\|dict] | call in progress
 | 12 | [CANCEL, CALL.Request\|id, Details\|dict] | call cancel
 | | publish
 | 13 | [EVENT, Request\|id, Topic\|uri, Arguments, Options\|dict] | event
@@ -680,19 +680,22 @@ _Example: A Router "CONNECTED" message._
 <type list> ::= [ <type> [ , <type> ] ]
 <type> ::= <simple type> | '['<type list>']' | '{' <prop name> [ '?' ] : <type> [ , <prop name> : <type> ] '}'
 <simple type> ::= <type char> [<description>]
-<description>::='`' [<name>] [<version>] [<UniqueId>] [<units>] [<variants>] [<manufacturer>] '`'
+<description>::='`' [<name>] [<version>] [<UniqueId>] [<units>] [<variants>] [<manufacturer>] [<comments>] '`'
 <version>::=’%’ string
 <UniqueId>::=’#’ string
 <units> ::= '$' string
 <variants> ::= '<' <value> [ , <value> ] '>'
 <manufacturer> ::= '@' string
-<type char> ::= i | s | b | f | B | N | Q | I | U | X | T | F | D | S
+<comments> ::= '/' string
+<type char> ::= i | s | o | e | b | f | B | N | Q | I | U | X | T | F | D | S
 ```
 
 simple type JSON and CBOR encoded
 
 * i integer
 * s  UTF-8 string
+* o  UTF-8 string as uri of reference object
+* o  UTF-8 string as uri of reference event
 * b boolean
 * f  floating point number
 
