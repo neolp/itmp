@@ -647,12 +647,12 @@ All messages are mandatory per role, i.e. in an implementation that only provide
 </tr>
 <tr>
 <td>10</td>
-<td>[ARGUMENTS, CALL.Request|id, Arguments, Options|dict]</td>
+<td>[ARGUMENTS, CALL.Request|id, ARGUMENTS.Sequuence|integer, Arguments, Options|dict]</td>
 <td>additional arguments for call</td>
 </tr>
 <tr>
 <td>11</td>
-<td>[PROGRESS, CALL.Request|id, Result, Details|dict]</td>
+<td>[PROGRESS, CALL.Request|id, PROGRESS.Sequuence|integer, Result, Details|dict]</td>
 <td>call in progress</td>
 </tr>
 <tr>
@@ -965,13 +965,14 @@ Similar to what browsers do with the "User-Agent" HTTP header, both the "CONNECT
 &lt;type list&gt; ::= [ &lt;type&gt; [ , &lt;type&gt; ] ]
 &lt;type&gt; ::= &lt;simple type&gt; | '['&lt;type list&gt;']' | '{' &lt;prop name&gt; [ '?' ] : &lt;type&gt; [ , &lt;prop name&gt; : &lt;type&gt; ] '}'
 &lt;simple type&gt; ::= &lt;type char&gt; [&lt;description&gt;]
-&lt;description&gt;::='`' [&lt;name&gt;] [&lt;version&gt;] [&lt;UniqueId&gt;] [&lt;units&gt;] [&lt;variants&gt;] [&lt;manufacturer&gt;] '`'
+&lt;description&gt;::='`' [&lt;name&gt;] [&lt;version&gt;] [&lt;UniqueId&gt;] [&lt;units&gt;] [&lt;variants&gt;] [&lt;manufacturer&gt;] [&lt;comments&gt;] '`'
 &lt;version&gt;::=’%’ string
 &lt;UniqueId&gt;::=’#’ string
 &lt;units&gt; ::= '$' string
 &lt;variants&gt; ::= '&lt;' &lt;value&gt; [ , &lt;value&gt; ] '&gt;'
 &lt;manufacturer&gt; ::= '@' string
-&lt;type char&gt; ::= i | s | b | f | B | N | Q | I | U | X | T | F | D | S
+&lt;comments&gt; ::= '/' string
+&lt;type char&gt; ::= i | s | o | e | b | f | B | N | Q | I | U | X | T | F | D | S
 </code></pre>
 
 <p>simple type JSON and CBOR encoded</p>
@@ -979,6 +980,8 @@ Similar to what browsers do with the "User-Agent" HTTP header, both the "CONNECT
 <ul>
 <li>i integer</li>
 <li>s  UTF-8 string</li>
+<li>o  UTF-8 string as uri of reference object</li>
+<li>o  UTF-8 string as uri of reference event</li>
 <li>b boolean</li>
 <li>f  floating point number</li>
 </ul>
@@ -1350,44 +1353,130 @@ Publications are acknowledged, and the Broker will respond, depends the publicat
 
 <p>ITMP pre-defines the following error codes. ITMP peers MUST use only the defined error messages.</p>
 
+<ul>
+<li>400 Bad Request</li>
+<li>401 Unauthorized</li>
+<li>403 Forbidden</li>
+<li>404 Not Found</li>
+<li>405 Method Not Allowed</li>
+<li>406 Not Acceptable</li>
+<li>413 Request Entity Too Large</li>
+<li>414 Request-URI Too Large</li>
+<li>418 I'm a teapot</li>
+<li>429 Too Many Requests</li>
+<li>419 Format error</li>
+<li>420 Type error</li>
+<li><p>421 Reserved...</p></li>
+<li><p>500 Internal Server Error</p></li>
+<li>501 Not Implemented</li>
+<li>507 Insufficient Storage</li>
+</ul>
+
 <h3>
 <a id="1111-400-bad-request" class="anchor" href="#1111-400-bad-request" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.1. 400 Bad request</h3>
 
-<p>When a Peer provides an incorrect URI for any URI-based attribute of a ITMP message (e.g. realm, topic), then the other Peer MUST respond with an "ERROR" message and give the following 400:
-11.1.2. Interaction
-Peer provided an incorrect URI for any URI-based attribute of ITMP message, such as realm, topic or procedure
-400 Bad Request.
-A Dealer could not perform a call, since no procedure is currently registered under the given URI.
-404 Not Found
-A Broker could not perform an unsubscribe, since the given subscription is not active.
-404 Not Found 
-A call failed since the given argument types or values are not acceptable to the called procedure. In this case the Callee may throw this error. Alternatively a Router may throw this error if it performed <em>payload validation</em> of a call, call result, call error or publish, and the payload did not conform to the requirements.
-512 Bag argument</p>
+<p>When a Peer provides an incorrect URI for any URI-based attribute of a ITMP message (e.g. realm, topic), then the other Peer MUST respond with an "ERROR" message and give the code 400 for such requests</p>
 
 <h3>
-<a id="1113-session-close" class="anchor" href="#1113-session-close" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.3. Session Close</h3>
+<a id="1112-401-unauthorized" class="anchor" href="#1112-401-unauthorized" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.2. 401 Unauthorized</h3>
 
-<p>The Peer is shutting down completely - used as a "DISCONNECT" (or "ABORT") reason.
-513 system shutdown
-The Peer want to leave the realm - used as a "DISCONNECT" reason.
-514 close realm
-A Peer acknowledges ending of a session - used as a "DISCONNECT" reply reason.
-202 goodbye and out</p>
+<p>When a Peer needs authorization they MUST respond with an "ERROR" message and give the code 401 for any requests except CONNECT
+A join, call, register, publish or subscribe failed, since the Peer is not authorized to perform the operation.</p>
+
+<p>A Dealer or Broker could not determine if the Peer is authorized to perform a join, call, register, publish or subscribe, since the authorization operation <em>itself</em> failed. E.g. a custom authorizer did run into an error.</p>
 
 <h3>
-<a id="1114-authorization" class="anchor" href="#1114-authorization" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.4. Authorization</h3>
+<a id="1113-403-forbidden" class="anchor" href="#1113-403-forbidden" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.3. 403 Forbidden</h3>
 
-<p>A join, call, register, publish or subscribe failed, since the Peer is not authorized to perform the operation.
-401 not authorized
-A Dealer or Broker could not determine if the Peer is authorized to perform a join, call, register, publish or subscribe, since the authorization operation <em>itself</em> failed. E.g. a custom authorizer did run into an error.
-401 authorization failed
-Peer wanted to join a non-existing realm (and the Router did not allow to auto-create the realm).
-404 no such realm</p>
+<p>When a Peer restrict using some methodta or arguments they MUST respond with an "ERROR" message and give the code 403 for any requests that violate restrictions</p>
 
-<p>A <em>Peer</em> requested an interaction with an option that was disallowed by the <em>Router</em>
-405 option not allowed
-A <em>Dealer</em> could not perform a call, since a procedure with the given URI is registered, but <em>Callee Black- and Whitelisting</em> and/or <em>Caller Exclusion</em> lead to the exclusion of (any) <em>Callee</em> providing the procedure.
-403 no eligible callee</p>
+<h3>
+<a id="1114-404-not-found" class="anchor" href="#1114-404-not-found" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.4. 404 Not Found</h3>
+
+<p>A Node could not perform a call or other action, since no procedure is currently registered under the given URI.</p>
+
+<h3>
+<a id="1115-405-method-not-allowed" class="anchor" href="#1115-405-method-not-allowed" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.5. 405 Method Not Allowed</h3>
+
+<p>A Node could not perform a call or other action, since type of uri is not intended to called function (for example CALL for event uri).</p>
+
+<h3>
+<a id="1116-406-not-acceptable" class="anchor" href="#1116-406-not-acceptable" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.6. 406 Not Acceptable</h3>
+
+<p>A Node could not perform a call or other action, since type of uri is not intended to called function (for example CALL for event uri).</p>
+
+<h3>
+<a id="1117-413-request-entity-too-large" class="anchor" href="#1117-413-request-entity-too-large" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.7. 413 Request Entity Too Large</h3>
+
+<p>A Node could not perform a call or other action, since message is too large.</p>
+
+<h3>
+<a id="1118-414-request-uri-too-large" class="anchor" href="#1118-414-request-uri-too-large" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.8. 414 Request-URI Too Large</h3>
+
+<p>A Node could not perform a call or other action, since message is too large.</p>
+
+<h3>
+<a id="1119-418-im-a-teapot" class="anchor" href="#1119-418-im-a-teapot" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.9. 418 I'm a teapot</h3>
+
+<p>A Node is teapot.</p>
+
+<h3>
+<a id="11110-429-too-many-requests" class="anchor" href="#11110-429-too-many-requests" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.10. 429 Too Many Requests</h3>
+
+<p>A Node could not perform a call or other action, since message is coming to fast.</p>
+
+<h3>
+<a id="11111-419-format-error" class="anchor" href="#11111-419-format-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.11. 419 Format error</h3>
+
+<p>A Node could not perform a call or other action, since message has bad format.</p>
+
+<h3>
+<a id="11112-420-type-error" class="anchor" href="#11112-420-type-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.12. 420 Type error</h3>
+
+<p>A Node could not perform a call or other action, since message components has bad type.</p>
+
+<h3>
+<a id="11113-421-reserved" class="anchor" href="#11113-421-reserved" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.13. 421 Reserved...</h3>
+
+<p>reserved code</p>
+
+<h3>
+<a id="11114-500-internal-server-error" class="anchor" href="#11114-500-internal-server-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.14. 500 Internal Server Error</h3>
+
+<p>A Node could not perform a call or other action, since internel error.</p>
+
+<h3>
+<a id="11115-501-not-implemented" class="anchor" href="#11115-501-not-implemented" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.15. 501 Not Implemented</h3>
+
+<p>A Node could not perform a call or other action, since call is not implemented.</p>
+
+<h3>
+<a id="11116-507-insufficient-storage" class="anchor" href="#11116-507-insufficient-storage" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.16. 507 Insufficient Storage</h3>
+
+<p>A Node could not perform a call or other action, since no storage space.</p>
+
+<h3>
+<a id="11117-512-bag-argument" class="anchor" href="#11117-512-bag-argument" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.17. 512 Bag argument</h3>
+
+<p>A call failed since the given argument types or values are not acceptable to the called procedure. In this case the Callee may throw this error. Alternatively a Router may throw this error if it performed <em>payload validation</em> of a call, call result or publish, and the payload did not conform to the requirements.</p>
+
+<h3>
+<a id="11118-513-session-close" class="anchor" href="#11118-513-session-close" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.18. 513 Session Close</h3>
+
+<p>The Peer is shutting down completely - used as a "DISCONNECT" (or "ABORT") reason.</p>
+
+<h3>
+<a id="11119-513-system-shutdown" class="anchor" href="#11119-513-system-shutdown" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.19. 513 system shutdown</h3>
+
+<p>The Peer is shutting down completely - used as a "DISCONNECT" (or "ABORT") reason.</p>
+
+<h3>
+<a id="11121-514-close-realm" class="anchor" href="#11121-514-close-realm" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.21. 514 close realm</h3>
+
+<p>A Peer acknowledges ending of a session - used as a "DISCONNECT" reply reason.</p>
+
+<h3>
+<a id="11122-202-goodbye-and-out" class="anchor" href="#11122-202-goodbye-and-out" aria-hidden="true"><span class="octicon octicon-link"></span></a>11.1.22. 202 goodbye and out</h3>
 
 <h1>
 <a id="12-examples" class="anchor" href="#12-examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>12. Examples</h1>
