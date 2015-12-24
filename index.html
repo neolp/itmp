@@ -416,16 +416,20 @@ All messages are mandatory per role, i.e. in an implementation that only provide
 
 <p>Sent by a Client to initiate opening of a ITMP session to a Server attaching to a Realm.</p>
 
-<p><code>[CONNECT, Realm|uri, Details|dict]</code></p>
+<p><code>[CONNECT, Connection|id, Realm|uri, Details|dict]</code></p>
 
 <p>in trusted environment CONNECT can be omitted, then client by default connected to empty ralm without extended features, mostly it is important to small mobile nodes without persistent connection</p>
+
+<p>Connection is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for sequring connection</p>
 
 <h4>
 <a id="6412-connected" class="anchor" href="#6412-connected" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.1.2. CONNECTED</h4>
 
 <p>Sent by a Server to accept a Client. The ITMP session is now open.</p>
 
-<p><code>[CONNECTED, Session|id, Details|dict]</code></p>
+<p><code>[CONNECTED, CONNECT.Connection|id, Session|id, Details|dict]</code></p>
+
+<p>Session is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for sequring connection</p>
 
 <h4>
 <a id="6413-abort" class="anchor" href="#6413-abort" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.1.3. ABORT</h4>
@@ -577,12 +581,12 @@ All messages are mandatory per role, i.e. in an implementation that only provide
 </tr>
 <tr>
 <td>0</td>
-<td>[CONNECT, Realm|uri, Details|dict]</td>
+<td>[CONNECT, Connection|id, Realm|uri, Details|dict]</td>
 <td>open connection</td>
 </tr>
 <tr>
 <td>1</td>
-<td>[CONNECTED, Session|id, Details|dict]</td>
+<td>[CONNECTED, CONNECT.Connection|id, Session|id, Details|dict]</td>
 <td>confirm connection</td>
 </tr>
 <tr>
