@@ -307,13 +307,16 @@ Sent by a Client to initiate opening of a ITMP session to a Server attaching to 
 
 in trusted environment CONNECT can be omitted, then client by default connected to empty ralm without extended features, mostly it is important to small mobile nodes without persistent connection
 
-Session is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for sequring connection
+Connection is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for sequring connection
 
 #### 6.4.1.2. CONNECTED
 
 Sent by a Server to accept a Client. The ITMP session is now open.
 
 `[CONNECTED, CONNECT.Connection|id, Session|id, Details|dict]`
+
+Session is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for sequring connection
+
 
 #### 6.4.1.3. ABORT
 
