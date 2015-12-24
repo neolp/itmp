@@ -303,15 +303,17 @@ ITMP not always uses sessions and in some implementation based on datagram trans
 
 Sent by a Client to initiate opening of a ITMP session to a Server attaching to a Realm.
 
-`[CONNECT, Realm|uri, Details|dict]`
+`[CONNECT, Connection|id, Realm|uri, Details|dict]`
 
 in trusted environment CONNECT can be omitted, then client by default connected to empty ralm without extended features, mostly it is important to small mobile nodes without persistent connection
+
+Session is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for sequring connection
 
 #### 6.4.1.2. CONNECTED
 
 Sent by a Server to accept a Client. The ITMP session is now open.
 
-`[CONNECTED, Session|id, Details|dict]`
+`[CONNECTED, CONNECT.Connection|id, Session|id, Details|dict]`
 
 #### 6.4.1.3. ABORT
 
@@ -431,8 +433,8 @@ Result of a call as returned to Caller if the error occur during call execution.
 | code | Format | desc |
 | ---- | ----------- | -------- |
 | | Connection
-| 0 | [CONNECT, Realm\|uri, Details\|dict] | open connection |
-| 1 | [CONNECTED, Session\|id, Details\|dict] | confirm connection
+| 0 | [CONNECT, Connection\|id, Realm\|uri, Details\|dict] | open connection |
+| 1 | [CONNECTED, CONNECT.Connection\|id, Session\|id, Details\|dict] | confirm connection
 | 2 | [ABORT, Code\|integer, Reason\|string, Details\|dict] | terminate connection
 | 3 | [DISCONNECT, Code\|integer, Reason\|string, Details\|dict] |  clear finish connection
 | | Information
