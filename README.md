@@ -463,13 +463,13 @@ Result of a call as returned to Caller if the error occur during call execution.
 | 18 | [UNSUBSCRIBE, Request\|id, Topic\|uri, Options\|dict]
 | 19 | [UNSUBSCRIBE_BY_ID, Request\|id, SUBSCRIBED.SubscriptionId\|id, Options\|dict] | unsibscribe
 | 20 | [UNSUBSCRIBED, UNSUBSCRIBE.Request\|id, Options\|dict]
-|  | subscribe
-| 21 | [ANOUNCE, Request\|id, Topic\|uri, description\|list, Options\|dict] | announce interface or event
-| 22 | [ACCEPTED, ANOUNCE.Request\|id, Options\|dict] | accept announcement
+|  | announcement
+| 21 | [ANNOUNCE, Request\|id, Topic\|uri, description\|list, Options\|dict] | announce interface or event
+| 22 | [ACCEPTED, ANNOUNCE.Request\|id, Options\|dict] | accept announcement
 
 ## 6.6. Extension Messages
 
-ITMP uses type codes from the core range [0, 19]. Implementations MAY define and use implementation specific messages with message type codes from the extension message range [20, 255]. For example, a router MAY implement router-to-router communication by using extension messages.
+ITMP uses type codes from the core range [0, 22]. Implementations MAY define and use implementation specific messages with message type codes from the extension message range [23, 255]. For example, a router MAY implement router-to-router communication by using extension messages.
 
 ## 6.7. Empty Options and Details
 
@@ -1161,7 +1161,7 @@ A Peer acknowledges ending of a session - used as a "DISCONNECT" reply reason.
 
 | Sensor Send | Server send |
 | --- | --- |
-| ```[ANOUNCE, 0, "",["TemperatureSensor`Smart Termometer%1.0#A2DF31CD@NSC Communication Siberia`:Sensor","getTemp&i`Temperature$degrees`()","Temp!s`My ID`i`Temperature$degrees`"] ]"]``` | ```[ACCEPTED, 0]``` |
+| ```[ANNOUNCE, 0, "",["TemperatureSensor`Smart Termometer%1.0#A2DF31CD@NSC Communication Siberia`:Sensor","getTemp&i`Temperature$degrees`()","Temp!s`My ID`i`Temperature$degrees`"] ]"]``` | ```[ACCEPTED, 0]``` |
 | `-` | ```[SUBSCRIBE, 0, ["Temp"] ]``` |
 | `[SUBSCRIBED, 0, 0]` | `-` |
 | ```[EVENT, 0, "Temp" ["A2DF31CD",24]``` | `-`
