@@ -437,6 +437,7 @@ Result of a call as returned to Caller if the error occur during call execution.
 | ---- | ----------- | -------- |
 | | Connection
 | 0 | [CONNECT, Connection\|id, Realm\|uri, Details\|dict] | open connection |
+| 2 | [PARAMETERS, CONNECT.Connection\|id, Details\|dict] | privide additional parameters for proper connection
 | 1 | [CONNECTED, CONNECT.Connection\|id, Session\|id, Details\|dict] | confirm connection
 | 2 | [ABORT, Code\|integer, Reason\|string, Details\|dict] | terminate connection
 | 3 | [DISCONNECT, Code\|integer, Reason\|string, Details\|dict] |  clear finish connection
