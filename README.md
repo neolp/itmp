@@ -771,6 +771,54 @@ While the single level wildcard only covers one topic level, the multi level wil
 
 A client subscribing to a topic with a multi level wildcard is receiving all messages, which start with the pattern before the wildcard character, no matter how long or deep the topics will get. If you only specify the multilevel wildcard as a topic (#), it means that you will get every message sent over the broker. If you expect high throughput this is an anti pattern.
 
+#### When topic-based wildcards are not wild
+
+The wildcard characters '+' and '#' have no special meaning when they are mixed with other characters (including themselves) in a topic level.
+
+For ITMP topics, consider the following examples:
+
+    level0.level1.+.level4/#
+    level0.level1.#.level4.level+
+
+In the first example, the characters '+' and '#' are treated as a wildcards and are therefore not valid in a topic string that is to be published to, but is valid in a subscription.
+
+In the second example, the character '+' is not the only character in a topic level. The character '#' is not the last character in the topic string. Therefore the topic string cannot be published or subscribed to.
+
+The following table provides examples of topic strings, and shows whether these strings are valid for ITMP publish/subscribe.
+
+Topic string 	| ITMP subscribe |	ITMP publish
+-------------|-------------|---------------
+\# |	Yes |	No
+\+ |	Yes |	No
+.# |	Yes |	No
+.+ |	Yes |	No
+## |	No |	No
+++ |	No |	No
+#.# |	No |	No
++.+ |	Yes |	No
+topic# |	No |	No
+topic+ |	No |	No
+topic.# |	Yes |	No
+topic.+ |	Yes |	No
+topic## |	No |	No
+topic++ |	No |	No
+topic.## |	No |	No
+topic.++ |	No |	No
+topic#.# |	No |	No
+topic+.+ |	No |	No
+topic.#.# |	No |	No
+topic.+.+ |	Yes |	No
+#topic |	No |	No
++topic |	No |	No
+#.topic |	No |	No
++.topic |	Yes |	No
+.#topic |	No |	No
+.+topic |	No |	No
+. |	Yes |	Yes
+topic.#.topic |	No |	No
+top+ic |	No |	No
+
+
 ### 9.2.1 Best practices
 
 #### Don’t use a leading dot
