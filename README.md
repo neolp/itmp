@@ -759,7 +759,7 @@ __Multi Level: #__
 
 While the single level wildcard only covers one topic level, the multi level wildcard covers an arbitrary number of topic levels. In order to determine the matching topics it is required that the multi level wildcard is always the last character in the topic and it is preceded by a dot.
 
-```myhome.groundfloor.#```
+`myhome.groundfloor.#`
 
 ```
 +  myhome.groundfloor.kitchen.temperature
