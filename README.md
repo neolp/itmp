@@ -69,7 +69,7 @@ A Client MAY implement any combination of the Roles:
 * Publisher
 * Subscriber
 
-Some time you need to combine several Roles - you can use 
+Some time you need to combine several Roles - you can use
 
 * Broker = [ Callee +  Caller + Publisher + Subscriber ]
 * Node = [Calle + Publisher]
@@ -98,7 +98,7 @@ The Publish & Subscribe messaging pattern involves peers of two different roles:
 * Subscriber
 * Publisher
 
-A Publishers publishes events to topics by providing the topic URI and any payload for the event. Subscribers of the topic will receive the event together with the event payload. Subscribers subscribe to topics they are interested. 
+A Publishers publishes events to topics by providing the topic URI and any payload for the event. Subscribers of the topic will receive the event together with the event payload. Subscribers subscribe to topics they are interested.
 
 Broker act both as Publisher for Subscribers and as Subscriber for Publishers at the same time. Brokers route events incoming from Publishers to Subscribers that are subscribed to respective topics.
 
@@ -268,7 +268,7 @@ The notation "Element|type" denotes a message element named "Element" of type "t
 * "id": an integer ID as defined in Section 5.1.2
 * "integer": a non-negative integer
 * "string": a Unicode string, including the empty string
-* "bool": a boolean value ("true" or "false") - integers MUST NOT be used instead of boolean value 
+* "bool": a boolean value ("true" or "false") - integers MUST NOT be used instead of boolean value
 * "dict": a dictionary (map) where keys MUST be strings, keys MUST be unique and serialization order is undefined (left to the serializer being used)
 * "list": a list (array) where items can be again any of this enumeration
 
@@ -443,7 +443,7 @@ Result of a call as returned to Caller if the error occur during call execution.
 | 3 | [DISCONNECT, Code\|integer, Reason\|string, Details\|dict] |  clear finish connection
 | | Information
 | 4 | [KEEP_ALIVE]	keep alive
-| 5 | [ERROR, Request\|id, Code\|integer, Reason\|string, Details\|dict] | error notificarion 
+| 5 | [ERROR, Request\|id, Code\|integer, Reason\|string, Details\|dict] | error notificarion
 | | Description
 | 6 | [DESCRIBE, Request\|id, Topic\|uri, Options\|dict] | get description
 | 7 | [DESCRIPTION, DESCRIBE.Request\|id, description\|list, Options\|dict] | description response
@@ -485,7 +485,7 @@ where " Options == {}" SHOULD be avoided, and instead
 
 SHOULD be sent.
 
-## 6.7. Empty Arguments 
+## 6.7. Empty Arguments
 
 Implementations SHOULD avoid sending empty "Arguments" lists if Options is empty.
 E.g. a "CALL" message
@@ -724,12 +724,94 @@ any sequence of primitive typed values encoded as byte array or base64 encoded s
 
 All of the following features for Publish & Subscribe are mandatory for ITMP Basic Profile implementations supporting the respective roles, i.e. _Publisher_, _Subscriber_.
 
-## 9.1. Subscribing and Unsubscribing
+## 9.1. Topics
+
+A topic is a UTF-8 string, which is used by the broker to filter messages for each connected client. A topic consists of one or more topic levels. Each topic level is separated by a dot (topic level separator).
+
+In comparison to a message queue a topic is very lightweight. There is no need for a client to create the desired topic before publishing or subscribing to it, because a broker accepts each valid topic without any prior initialization.
+
+Here are a few example topics:
+
+    myhome.groundfloor.livingroom.temperature
+    USA.California.San Francisco.Silicon Valley
+    5ff4a2ce-e485-40f4-826c-b1a5d81be9b6.status
+    Germany.Bavaria.car.2382340923453.latitude
+
+Noticeable is that each topic must have at least 1 character to be valid and it can also contain spaces. Also a topic is case-sensitive, which makes myhome.temperature and MyHome.Temperature two individual topics. Additionally the dot alone is a valid topic, too.
+
+## 9.2. Wildcards
+
+When a client subscribes to a topic it can use the exact topic the message was published to or it can subscribe to more topics at once by using wildcards. A wildcard can only be used when subscribing to topics and is not permitted when publishing a message. In the following we will look at the two different kinds one by one: single level and multi level wildcards.
+
+__Single Level: +__
+
+As the name already suggests, a single level wildcard is a substitute for one topic level. The plus symbol represents a single level wildcard in the topic.
+
+Any topic matches to a topic including the single level wildcard if it contains an arbitrary string instead of the wildcard. For example a subscription to myhome.groundfloor.+.temperature would match or not match the following topics:
+```
++  myhome.groundfloor.kitchen.temperature
++  myhome.groundfloor.livingroom.temperature
+-  myhome.groundfloor.livingroom.brightness
+-  myhome.firstfloor.kitchen.temperature
+-  myhome.groundfloor.kitchen.fridge.temperature
+```
+__Multi Level: #__
+
+While the single level wildcard only covers one topic level, the multi level wildcard covers an arbitrary number of topic levels. In order to determine the matching topics it is required that the multi level wildcard is always the last character in the topic and it is preceded by a dot.
+
+```myhome.groundfloor.#```
+
+```
++  myhome.groundfloor.kitchen.temperature
++  myhome.groundfloor.livingroom.temperature
++  myhome.groundfloor.livingroom.brightness
++  myhome.groundfloor.kitchen.fridge.temperature
+-  myhome.firstfloor.kitchen.temperature
+```
+
+A client subscribing to a topic with a multi level wildcard is receiving all messages, which start with the pattern before the wildcard character, no matter how long or deep the topics will get. If you only specify the multilevel wildcard as a topic (#), it means that you will get every message sent over the broker. If you expect high throughput this is an anti pattern.
+
+### 9.2.1 Best practices
+
+#### Don’t use a leading dot
+
+It is allowed to use a leading dot in ITMP, for example .myhome.groundfloor.livingroom. But that introduces a unnecessary topic level with a zero character at the front. That should be avoided, because it doesn’t provide any benefit and often leads to confusion.
+
+#### Don’t use spaces in a topic
+
+A space is the natural enemy of each programmer, they often make it much harder to read and debug topics, when things are not going the way, they should be. So similar to the first one, only because something is allowed doesn’t mean it should be used. UTF-8 knows many different white space types, it’s pretty obvious that such uncommon characters should be avoided.
+
+#### Keep the topic short and concise
+
+Each topic will be included in every message it is used in, so you should think about making them short and concise. When it comes to small devices, each byte counts and makes really a difference.
+
+#### Use only ASCII characters, avoid non printable characters
+
+Using non-ASCII UTF-8 character makes it really hard to find typos or issues related to the character set, because often they can not be displayed correctly. Unless it is really necessary we recommend avoid using non ASCII character in a topic.
+
+#### Embed a unique identifier or the ClientId into the topic
+
+In some cases it is very helpful, when the topic contains a unique identifier of the client the publish is coming from. This helps identifying, who send the message. Another advantage is the enforcement of authorization, so that only a client with the same ClientId as contained in the topic is allowed to publish to that topic. So a client with the id client1 is allowed to publish to client1.status, but not permitted to publish to client2.status.
+
+#### Don’t subscribe to \#
+
+Sometimes it is necessary to subscribe to all messages, which are transferred over the broker, for example when persisting all of them into a database. This should not be done by using a ITMP client and subscribing to the multi level wildcard. The reason is that often the subscribing client is not able to process the load of messages that is coming its way. Especially if you have a massive throughput. Our recommended solution is to implement an extension in the ITMP broker.
+
+#### Don’t forget extensibility
+
+Topics are a flexible concept and there is no need to preallocate them in any kind of way, regardless both the publisher and subscriber need to be aware of the topic. So it is important to think about how they can be extended in case you are adding new features to your product. For example when your smart home solution is extended by some new sensors, it should be possible to add these to your topic tree without changing the whole topic hierarchy.
+
+#### Use specific topics, instead of general ones
+
+When naming topics it is important not to use them like a queue, for example using only one topic for all messages is a anti pattern. You should use as specific topics as possible. So if you have three sensors in your living room, you should use topics myhome.livingroom.temperature, myhome.livingroom.brightness and myhome.livingroom.humidity, instead of sending all values over myhome.livingroom. Also this enables you to use other ITMP features like retained messages, which we cover in one of the next posts.
+
+## 9.3. Subscribing and Unsubscribing
 
 The message flow between Clients implementing the role of Subscriber and Routers implementing the role of Broker for subscribing and unsubscribing involves the following messages:
 
 1. "SUBSCRIBE"
 2. "SUBSCRIBED"
+3. "Subscribe ERROR"
 3. "UNSUBSCRIBE"
 4. "UNSUBSCRIBED"
 5. "ERROR"
@@ -739,7 +821,7 @@ Upon subscribing to a topic via the "SUBSCRIBE" message, a Subscriber will recei
 A subscription lasts for the duration of a session, unless a Subscriber opts out from a previously established subscription via the "UNSUBSCRIBE" message.
 A Subscriber may have more than one event handler attached to the same subscription. This can be implemented in different ways: a) a Subscriber can recognize itself that it is already subscribed and just attach another handler to the subscription for incoming events, b) or it can send a new "SUBSCRIBE" message to broker (as it would be first) and upon receiving a "SUBSCRIBED.Subscription|id" it already knows about, attach the handler to the existing subscription
 
-### 9.1.1. SUBSCRIBE
+### 9.3.1. SUBSCRIBE
 
 A Subscriber communicates its interest in a topic to a Broker by sending a "SUBSCRIBE" message:
 
@@ -759,7 +841,7 @@ _Example_
 
 A Broker, receiving a "SUBSCRIBE" message, can fullfill or reject the subscription, so it answers with "SUBSCRIBED" or "ERROR" messages.
 
-### 9.1.2. SUBSCRIBED
+### 9.3.2. SUBSCRIBED
 
 If the Broker is able to fulfill and allow the subscription, it answers by sending a "SUBSCRIBED" message to the Subscriber
 
@@ -777,7 +859,9 @@ _Example_
 
 Note. The "Subscription" ID chosen by the broker need not be unique to the subscription of a single Subscriber, but may be assigned to the "Topic", or the combination of the "Topic" and some or all "Options", such as the topic pattern matching method to be used. Then this ID may be sent to all Subscribers for the "Topic" or "Topic" / "Options" combination. This allows the Broker to serialize an event to be delivered only once for all actual receivers of the event.
 In case of receiving a "SUBSCRIBE" message from the same Subscriber and to already subscribed topic, Broker should answer with "SUBSCRIBED" message, containing the existing "Subscription|id".
-### 9.1.3. Subscribe ERROR
+
+### 9.3.3. Subscribe ERROR
+
 When the request for subscription cannot be fulfilled by the Broker, the Broker sends back an "ERROR" message to the Subscriber
 
 `[ERROR, SUBSCRIBE.Request|id, Code|integer, Description|string, Details|dict]`
@@ -794,7 +878,7 @@ _Example_
 
 `[8, 713845233, 401, " not authorized"]`
 
-### 9.1.4. UNSUBSCRIBE
+### 9.3.4. UNSUBSCRIBE
 When a Subscriber is no longer interested in receiving events for a subscription it sends an "UNSUBSCRIBE" message
 
 `[UNSUBSCRIBE, Request|id, SUBSCRIBED.Subscription|id]`
@@ -809,7 +893,7 @@ _Example_
 
 `[34, 85346237, 5512315355]`
 
-### 9.1.5. UNSUBSCRIBED
+### 9.3.5. UNSUBSCRIBED
 
 Upon successful unsubscription, the Broker sends an "UNSUBSCRIBED" message to the Subscriber
 
@@ -823,7 +907,7 @@ _Example_
 
 `[35, 85346237]`
 
-### 9.1.6. Unsubscribe ERROR
+### 9.3.6. Unsubscribe ERROR
 
 When the request fails, the Broker sends an "ERROR"
 
@@ -841,7 +925,8 @@ _Example_
 
 `[8, 85346237, 404, "No such subscription"]`
 
-## 9.2. Publishing and Events
+## 9.4. Publishing and Events
+
 The message flow between Publishers, a Broker and Subscribers for publishing to topics and dispatching events involves the following messages:
 
 3. "EVENT"
@@ -849,7 +934,7 @@ The message flow between Publishers, a Broker and Subscribers for publishing to 
 2. "PUBLISHED"
 4. "ERROR"
 
-### 9.2.1. EVENT
+### 9.4.1. EVENT
 
 When a Publisher requests to publish an event to some topic, it sends a "EVENT" message to a Broker:
 
@@ -865,7 +950,7 @@ where
 
 "Options" is a dictionary that allows to provide additional publication request details in an extensible way. This is described further below.
 
-That publications are unacknowledged, and the Broker will not respond, whether the publication was successful indeed or not. 
+That publications are unacknowledged, and the Broker will not respond, whether the publication was successful indeed or not.
 
 _Example_
 
@@ -879,7 +964,15 @@ _Example_
 
 `[16, 239714735, "com.myapp.mytopic1", {"color": "orange", "sizes": [23, 42, 7]}]`
 
-### 9.2.1. PUBLISH
+#### Best Practice
+
+Use Event when …
+
+* You have a complete or almost stable connection between sender and receiver. A classic use case is when connecting a test client or a front end application to a MQTT broker over a wired connection.
+* You don’t care if one or more messages are lost once a while. That is sometimes the case if the data is not that important or will be send at short intervals, where it is okay that messages might get lost.
+* You don’t need any message queuing. Messages are only queued for disconnected clients if they have subscribed for publishable topics.
+
+### 9.4.1. PUBLISH
 
 When a Publisher requests to publish an event to some topic, it sends a "PUBLISH" message to a Broker:
 
@@ -896,7 +989,7 @@ where
 "Options" is a dictionary that allows to provide additional publication request details in an extensible way. This is described further below.
 
 If the Broker is able to fulfill and allowing the publication, the Broker will send the event to all current Subscribers of the topic of the published event.
-Publications are acknowledged, and the Broker will respond, depends the publication was successful indeed or not. 
+Publications are acknowledged, and the Broker will respond, depends the publication was successful indeed or not.
 
 _Example_
 
@@ -910,7 +1003,13 @@ _Example_
 
 `[16, 239714735, "com.myapp.mytopic1", {"color": "orange", "sizes": [23, 42, 7]}]`
 
-### 9.2.2. PUBLISHED
+#### Best Practice
+
+Use Publish when …
+
+* It is critical to your application to receive all messages exactly once. This is often the case if a duplicate delivery would do harm to application users or subscribing clients. You should be aware of the overhead and that it takes a bit longer to complete the publish flow.
+
+### 9.4.2. PUBLISHED
 
 If the Broker is able to fulfill and allowing the publication of PUBLISH message, the Broker replies by sending a "PUBLISHED" message to the Publisher:
 
@@ -926,7 +1025,7 @@ _Example_
 
 `[17, 239714735, 4429313566]`
 
-### 9.2.3. Publish ERROR
+### 9.4.3. Publish ERROR
 
 When the PUBLISH request for publication cannot be fulfilled by the Broker, the Broker sends back an "ERROR" message to the Publisher
 
@@ -970,7 +1069,7 @@ where
 
 "Procedure" is the URI of the procedure to be called.
 
-"Arguments" is a list of positional call arguments (each of arbitrary type) or dictionary of keyword call arguments. The Arguments may be empty or omitted. 
+"Arguments" is a list of positional call arguments (each of arbitrary type) or dictionary of keyword call arguments. The Arguments may be empty or omitted.
 
 _Example_
 
