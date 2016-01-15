@@ -126,7 +126,7 @@ A Client MAY implement any combination of the Roles:</p>
 <li>Subscriber</li>
 </ul>
 
-<p>Some time you need to combine several Roles - you can use </p>
+<p>Some time you need to combine several Roles - you can use</p>
 
 <ul>
 <li>Broker = [ Callee +  Caller + Publisher + Subscriber ]</li>
@@ -164,7 +164,7 @@ The Caller and Callee will usually run application code, while the Broker works 
 <li>Publisher</li>
 </ul>
 
-<p>A Publishers publishes events to topics by providing the topic URI and any payload for the event. Subscribers of the topic will receive the event together with the event payload. Subscribers subscribe to topics they are interested. </p>
+<p>A Publishers publishes events to topics by providing the topic URI and any payload for the event. Subscribers of the topic will receive the event together with the event payload. Subscribers subscribe to topics they are interested.</p>
 
 <p>Broker act both as Publisher for Subscribers and as Subscriber for Publishers at the same time. Brokers route events incoming from Publishers to Subscribers that are subscribed to respective topics.</p>
 
@@ -375,7 +375,7 @@ The diagram below illustrates the full transport connection and session lifecycl
 <li>"id": an integer ID as defined in Section 5.1.2</li>
 <li>"integer": a non-negative integer</li>
 <li>"string": a Unicode string, including the empty string</li>
-<li>"bool": a boolean value ("true" or "false") - integers MUST NOT be used instead of boolean value </li>
+<li>"bool": a boolean value ("true" or "false") - integers MUST NOT be used instead of boolean value</li>
 <li>"dict": a dictionary (map) where keys MUST be strings, keys MUST be unique and serialization order is undefined (left to the serializer being used)</li>
 <li>"list": a list (array) where items can be again any of this enumeration</li>
 </ul>
@@ -420,7 +420,7 @@ All messages are mandatory per role, i.e. in an implementation that only provide
 
 <p>in trusted environment CONNECT can be omitted, then client by default connected to empty ralm without extended features, mostly it is important to small mobile nodes without persistent connection</p>
 
-<p>Connection is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for sequring connection</p>
+<p><code>Connection</code> is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for securing connection</p>
 
 <h4>
 <a id="6412-connected" class="anchor" href="#6412-connected" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.1.2. CONNECTED</h4>
@@ -429,7 +429,7 @@ All messages are mandatory per role, i.e. in an implementation that only provide
 
 <p><code>[CONNECTED, CONNECT.Connection|id, Session|id, Details|dict]</code></p>
 
-<p>Session is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for sequring connection</p>
+<p>Session is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for securing connection</p>
 
 <h4>
 <a id="6413-abort" class="anchor" href="#6413-abort" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.4.1.3. ABORT</h4>
@@ -585,6 +585,11 @@ All messages are mandatory per role, i.e. in an implementation that only provide
 <td>open connection</td>
 </tr>
 <tr>
+<td>2</td>
+<td>[PARAMETERS, CONNECT.Connection|id, Details|dict]</td>
+<td>privide additional parameters for proper connection</td>
+</tr>
+<tr>
 <td>1</td>
 <td>[CONNECTED, CONNECT.Connection|id, Session|id, Details|dict]</td>
 <td>confirm connection</td>
@@ -716,17 +721,17 @@ All messages are mandatory per role, i.e. in an implementation that only provide
 </tr>
 <tr>
 <td></td>
-<td>subscribe</td>
+<td>announcement</td>
 <td></td>
 </tr>
 <tr>
 <td>21</td>
-<td>[ANOUNCE, Request|id, Topic|uri, description|list, Options|dict]</td>
+<td>[ANNOUNCE, Request|id, Topic|uri, description|list, Options|dict]</td>
 <td>announce interface or event</td>
 </tr>
 <tr>
 <td>22</td>
-<td>[ACCEPTED, ANOUNCE.Request|id, Options|dict]</td>
+<td>[ACCEPTED, ANNOUNCE.Request|id, Options|dict]</td>
 <td>accept announcement</td>
 </tr>
 </tbody>
@@ -735,7 +740,7 @@ All messages are mandatory per role, i.e. in an implementation that only provide
 <h2>
 <a id="66-extension-messages" class="anchor" href="#66-extension-messages" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.6. Extension Messages</h2>
 
-<p>ITMP uses type codes from the core range [0, 19]. Implementations MAY define and use implementation specific messages with message type codes from the extension message range [20, 255]. For example, a router MAY implement router-to-router communication by using extension messages.</p>
+<p>ITMP uses type codes from the core range [0, 22]. Implementations MAY define and use implementation specific messages with message type codes from the extension message range [23, 255]. For example, a router MAY implement router-to-router communication by using extension messages.</p>
 
 <h2>
 <a id="67-empty-options-and-details" class="anchor" href="#67-empty-options-and-details" aria-hidden="true"><span class="octicon octicon-link"></span></a>6.7. Empty Options and Details</h2>
@@ -1013,13 +1018,281 @@ Similar to what browsers do with the "User-Agent" HTTP header, both the "CONNECT
 <p>All of the following features for Publish &amp; Subscribe are mandatory for ITMP Basic Profile implementations supporting the respective roles, i.e. <em>Publisher</em>, <em>Subscriber</em>.</p>
 
 <h2>
-<a id="91-subscribing-and-unsubscribing" class="anchor" href="#91-subscribing-and-unsubscribing" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1. Subscribing and Unsubscribing</h2>
+<a id="91-topics" class="anchor" href="#91-topics" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1. Topics</h2>
+
+<p>A topic is a UTF-8 string, which is used by the broker to filter messages for each connected client. A topic consists of one or more topic levels. Each topic level is separated by a dot (topic level separator).</p>
+
+<p>In comparison to a message queue a topic is very lightweight. There is no need for a client to create the desired topic before publishing or subscribing to it, because a broker accepts each valid topic without any prior initialization.</p>
+
+<p>Here are a few example topics:</p>
+
+<pre><code>myhome.groundfloor.livingroom.temperature
+USA.California.San Francisco.Silicon Valley
+5ff4a2ce-e485-40f4-826c-b1a5d81be9b6.status
+Germany.Bavaria.car.2382340923453.latitude
+</code></pre>
+
+<p>Noticeable is that each topic must have at least 1 character to be valid and it can also contain spaces. Also a topic is case-sensitive, which makes myhome.temperature and MyHome.Temperature two individual topics. Additionally the dot alone is a valid topic, too.</p>
+
+<h2>
+<a id="92-wildcards" class="anchor" href="#92-wildcards" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.2. Wildcards</h2>
+
+<p>When a client subscribes to a topic it can use the exact topic the message was published to or it can subscribe to more topics at once by using wildcards. A wildcard can only be used when subscribing to topics and is not permitted when publishing a message. In the following we will look at the two different kinds one by one: single level and multi level wildcards.</p>
+
+<p><strong>Single Level: +</strong></p>
+
+<p>As the name already suggests, a single level wildcard is a substitute for one topic level. The plus symbol represents a single level wildcard in the topic.</p>
+
+<p>Any topic matches to a topic including the single level wildcard if it contains an arbitrary string instead of the wildcard. For example a subscription to myhome.groundfloor.+.temperature would match or not match the following topics:</p>
+
+<pre><code>+  myhome.groundfloor.kitchen.temperature
++  myhome.groundfloor.livingroom.temperature
+-  myhome.groundfloor.livingroom.brightness
+-  myhome.firstfloor.kitchen.temperature
+-  myhome.groundfloor.kitchen.fridge.temperature
+</code></pre>
+
+<p><strong>Multi Level: #</strong></p>
+
+<p>While the single level wildcard only covers one topic level, the multi level wildcard covers an arbitrary number of topic levels. In order to determine the matching topics it is required that the multi level wildcard is always the last character in the topic and it is preceded by a dot.</p>
+
+<p><code>myhome.groundfloor.#</code></p>
+
+<pre><code>+  myhome.groundfloor.kitchen.temperature
++  myhome.groundfloor.livingroom.temperature
++  myhome.groundfloor.livingroom.brightness
++  myhome.groundfloor.kitchen.fridge.temperature
+-  myhome.firstfloor.kitchen.temperature
+</code></pre>
+
+<p>A client subscribing to a topic with a multi level wildcard is receiving all messages, which start with the pattern before the wildcard character, no matter how long or deep the topics will get. If you only specify the multilevel wildcard as a topic (#), it means that you will get every message sent over the broker. If you expect high throughput this is an anti pattern.</p>
+
+<h4>
+<a id="when-topic-based-wildcards-are-not-wild" class="anchor" href="#when-topic-based-wildcards-are-not-wild" aria-hidden="true"><span class="octicon octicon-link"></span></a>When topic-based wildcards are not wild</h4>
+
+<p>The wildcard characters '+' and '#' have no special meaning when they are mixed with other characters (including themselves) in a topic level.</p>
+
+<p>For ITMP topics, consider the following examples:</p>
+
+<pre><code>level0.level1.+.level4/#
+level0.level1.#.level4.level+
+</code></pre>
+
+<p>In the first example, the characters '+' and '#' are treated as a wildcards and are therefore not valid in a topic string that is to be published to, but is valid in a subscription.</p>
+
+<p>In the second example, the character '+' is not the only character in a topic level. The character '#' is not the last character in the topic string. Therefore the topic string cannot be published or subscribed to.</p>
+
+<p>The following table provides examples of topic strings, and shows whether these strings are valid for ITMP publish/subscribe.</p>
+
+<table>
+<thead>
+<tr>
+<th>Topic string</th>
+<th>ITMP subscribe</th>
+<th>ITMP publish</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>#</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>+</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>.#</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>.+</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>##</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>++</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>#.#</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>+.+</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>topic#</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>topic+</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>topic.#</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>topic.+</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>topic##</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>topic++</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>topic.##</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>topic.++</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>topic#.#</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>topic+.+</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>topic.#.#</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>topic.+.+</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>#topic</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>+topic</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>#.topic</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>+.topic</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>.#topic</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>.+topic</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>.</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>topic.#.topic</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>top+ic</td>
+<td>No</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+
+<h3>
+<a id="921-best-practices" class="anchor" href="#921-best-practices" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.2.1 Best practices</h3>
+
+<h4>
+<a id="dont-use-a-leading-dot" class="anchor" href="#dont-use-a-leading-dot" aria-hidden="true"><span class="octicon octicon-link"></span></a>Don’t use a leading dot</h4>
+
+<p>It is allowed to use a leading dot in ITMP, for example .myhome.groundfloor.livingroom. But that introduces a unnecessary topic level with a zero character at the front. That should be avoided, because it doesn’t provide any benefit and often leads to confusion.</p>
+
+<h4>
+<a id="dont-use-spaces-in-a-topic" class="anchor" href="#dont-use-spaces-in-a-topic" aria-hidden="true"><span class="octicon octicon-link"></span></a>Don’t use spaces in a topic</h4>
+
+<p>A space is the natural enemy of each programmer, they often make it much harder to read and debug topics, when things are not going the way, they should be. So similar to the first one, only because something is allowed doesn’t mean it should be used. UTF-8 knows many different white space types, it’s pretty obvious that such uncommon characters should be avoided.</p>
+
+<h4>
+<a id="keep-the-topic-short-and-concise" class="anchor" href="#keep-the-topic-short-and-concise" aria-hidden="true"><span class="octicon octicon-link"></span></a>Keep the topic short and concise</h4>
+
+<p>Each topic will be included in every message it is used in, so you should think about making them short and concise. When it comes to small devices, each byte counts and makes really a difference.</p>
+
+<h4>
+<a id="use-only-ascii-characters-avoid-non-printable-characters" class="anchor" href="#use-only-ascii-characters-avoid-non-printable-characters" aria-hidden="true"><span class="octicon octicon-link"></span></a>Use only ASCII characters, avoid non printable characters</h4>
+
+<p>Using non-ASCII UTF-8 character makes it really hard to find typos or issues related to the character set, because often they can not be displayed correctly. Unless it is really necessary we recommend avoid using non ASCII character in a topic.</p>
+
+<h4>
+<a id="embed-a-unique-identifier-or-the-clientid-into-the-topic" class="anchor" href="#embed-a-unique-identifier-or-the-clientid-into-the-topic" aria-hidden="true"><span class="octicon octicon-link"></span></a>Embed a unique identifier or the ClientId into the topic</h4>
+
+<p>In some cases it is very helpful, when the topic contains a unique identifier of the client the publish is coming from. This helps identifying, who send the message. Another advantage is the enforcement of authorization, so that only a client with the same ClientId as contained in the topic is allowed to publish to that topic. So a client with the id client1 is allowed to publish to client1.status, but not permitted to publish to client2.status.</p>
+
+<h4>
+<a id="dont-subscribe-to-" class="anchor" href="#dont-subscribe-to-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Don’t subscribe to \</h4>
+
+<p>Sometimes it is necessary to subscribe to all messages, which are transferred over the broker, for example when persisting all of them into a database. This should not be done by using a ITMP client and subscribing to the multi level wildcard. The reason is that often the subscribing client is not able to process the load of messages that is coming its way. Especially if you have a massive throughput. Our recommended solution is to implement an extension in the ITMP broker.</p>
+
+<h4>
+<a id="dont-forget-extensibility" class="anchor" href="#dont-forget-extensibility" aria-hidden="true"><span class="octicon octicon-link"></span></a>Don’t forget extensibility</h4>
+
+<p>Topics are a flexible concept and there is no need to preallocate them in any kind of way, regardless both the publisher and subscriber need to be aware of the topic. So it is important to think about how they can be extended in case you are adding new features to your product. For example when your smart home solution is extended by some new sensors, it should be possible to add these to your topic tree without changing the whole topic hierarchy.</p>
+
+<h4>
+<a id="use-specific-topics-instead-of-general-ones" class="anchor" href="#use-specific-topics-instead-of-general-ones" aria-hidden="true"><span class="octicon octicon-link"></span></a>Use specific topics, instead of general ones</h4>
+
+<p>When naming topics it is important not to use them like a queue, for example using only one topic for all messages is a anti pattern. You should use as specific topics as possible. So if you have three sensors in your living room, you should use topics myhome.livingroom.temperature, myhome.livingroom.brightness and myhome.livingroom.humidity, instead of sending all values over myhome.livingroom. Also this enables you to use other ITMP features like retained messages, which we cover in one of the next posts.</p>
+
+<h2>
+<a id="93-subscribing-and-unsubscribing" class="anchor" href="#93-subscribing-and-unsubscribing" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.3. Subscribing and Unsubscribing</h2>
 
 <p>The message flow between Clients implementing the role of Subscriber and Routers implementing the role of Broker for subscribing and unsubscribing involves the following messages:</p>
 
 <ol>
 <li>"SUBSCRIBE"</li>
 <li>"SUBSCRIBED"</li>
+<li>"Subscribe ERROR"</li>
 <li>"UNSUBSCRIBE"</li>
 <li>"UNSUBSCRIBED"</li>
 <li>"ERROR"</li>
@@ -1031,7 +1304,7 @@ A subscription lasts for the duration of a session, unless a Subscriber opts out
 A Subscriber may have more than one event handler attached to the same subscription. This can be implemented in different ways: a) a Subscriber can recognize itself that it is already subscribed and just attach another handler to the subscription for incoming events, b) or it can send a new "SUBSCRIBE" message to broker (as it would be first) and upon receiving a "SUBSCRIBED.Subscription|id" it already knows about, attach the handler to the existing subscription</p>
 
 <h3>
-<a id="911-subscribe" class="anchor" href="#911-subscribe" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1.1. SUBSCRIBE</h3>
+<a id="931-subscribe" class="anchor" href="#931-subscribe" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.3.1. SUBSCRIBE</h3>
 
 <p>A Subscriber communicates its interest in a topic to a Broker by sending a "SUBSCRIBE" message:</p>
 
@@ -1052,7 +1325,7 @@ A Subscriber may have more than one event handler attached to the same subscript
 <p>A Broker, receiving a "SUBSCRIBE" message, can fullfill or reject the subscription, so it answers with "SUBSCRIBED" or "ERROR" messages.</p>
 
 <h3>
-<a id="912-subscribed" class="anchor" href="#912-subscribed" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1.2. SUBSCRIBED</h3>
+<a id="932-subscribed" class="anchor" href="#932-subscribed" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.3.2. SUBSCRIBED</h3>
 
 <p>If the Broker is able to fulfill and allow the subscription, it answers by sending a "SUBSCRIBED" message to the Subscriber</p>
 
@@ -1072,7 +1345,7 @@ A Subscriber may have more than one event handler attached to the same subscript
 In case of receiving a "SUBSCRIBE" message from the same Subscriber and to already subscribed topic, Broker should answer with "SUBSCRIBED" message, containing the existing "Subscription|id".</p>
 
 <h3>
-<a id="913-subscribe-error" class="anchor" href="#913-subscribe-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1.3. Subscribe ERROR</h3>
+<a id="933-subscribe-error" class="anchor" href="#933-subscribe-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.3.3. Subscribe ERROR</h3>
 
 <p>When the request for subscription cannot be fulfilled by the Broker, the Broker sends back an "ERROR" message to the Subscriber</p>
 
@@ -1091,7 +1364,7 @@ In case of receiving a "SUBSCRIBE" message from the same Subscriber and to alrea
 <p><code>[8, 713845233, 401, " not authorized"]</code></p>
 
 <h3>
-<a id="914-unsubscribe" class="anchor" href="#914-unsubscribe" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1.4. UNSUBSCRIBE</h3>
+<a id="934-unsubscribe" class="anchor" href="#934-unsubscribe" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.3.4. UNSUBSCRIBE</h3>
 
 <p>When a Subscriber is no longer interested in receiving events for a subscription it sends an "UNSUBSCRIBE" message</p>
 
@@ -1108,7 +1381,7 @@ In case of receiving a "SUBSCRIBE" message from the same Subscriber and to alrea
 <p><code>[34, 85346237, 5512315355]</code></p>
 
 <h3>
-<a id="915-unsubscribed" class="anchor" href="#915-unsubscribed" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1.5. UNSUBSCRIBED</h3>
+<a id="935-unsubscribed" class="anchor" href="#935-unsubscribed" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.3.5. UNSUBSCRIBED</h3>
 
 <p>Upon successful unsubscription, the Broker sends an "UNSUBSCRIBED" message to the Subscriber</p>
 
@@ -1123,7 +1396,7 @@ In case of receiving a "SUBSCRIBE" message from the same Subscriber and to alrea
 <p><code>[35, 85346237]</code></p>
 
 <h3>
-<a id="916-unsubscribe-error" class="anchor" href="#916-unsubscribe-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.1.6. Unsubscribe ERROR</h3>
+<a id="936-unsubscribe-error" class="anchor" href="#936-unsubscribe-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.3.6. Unsubscribe ERROR</h3>
 
 <p>When the request fails, the Broker sends an "ERROR"</p>
 
@@ -1142,7 +1415,7 @@ In case of receiving a "SUBSCRIBE" message from the same Subscriber and to alrea
 <p><code>[8, 85346237, 404, "No such subscription"]</code></p>
 
 <h2>
-<a id="92-publishing-and-events" class="anchor" href="#92-publishing-and-events" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.2. Publishing and Events</h2>
+<a id="94-publishing-and-events" class="anchor" href="#94-publishing-and-events" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.4. Publishing and Events</h2>
 
 <p>The message flow between Publishers, a Broker and Subscribers for publishing to topics and dispatching events involves the following messages:</p>
 
@@ -1154,7 +1427,7 @@ In case of receiving a "SUBSCRIBE" message from the same Subscriber and to alrea
 </ol>
 
 <h3>
-<a id="921-event" class="anchor" href="#921-event" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.2.1. EVENT</h3>
+<a id="941-event" class="anchor" href="#941-event" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.4.1. EVENT</h3>
 
 <p>When a Publisher requests to publish an event to some topic, it sends a "EVENT" message to a Broker:</p>
 
@@ -1170,7 +1443,7 @@ In case of receiving a "SUBSCRIBE" message from the same Subscriber and to alrea
 
 <p>"Options" is a dictionary that allows to provide additional publication request details in an extensible way. This is described further below.</p>
 
-<p>That publications are unacknowledged, and the Broker will not respond, whether the publication was successful indeed or not. </p>
+<p>That publications are unacknowledged, and the Broker will not respond, whether the publication was successful indeed or not.</p>
 
 <p><em>Example</em></p>
 
@@ -1184,8 +1457,19 @@ In case of receiving a "SUBSCRIBE" message from the same Subscriber and to alrea
 
 <p><code>[16, 239714735, "com.myapp.mytopic1", {"color": "orange", "sizes": [23, 42, 7]}]</code></p>
 
+<h4>
+<a id="best-practice" class="anchor" href="#best-practice" aria-hidden="true"><span class="octicon octicon-link"></span></a>Best Practice</h4>
+
+<p>Use Event when …</p>
+
+<ul>
+<li>You have a complete or almost stable connection between sender and receiver. A classic use case is when connecting a test client or a front end application to a MQTT broker over a wired connection.</li>
+<li>You don’t care if one or more messages are lost once a while. That is sometimes the case if the data is not that important or will be send at short intervals, where it is okay that messages might get lost.</li>
+<li>You don’t need any message queuing. Messages are only queued for disconnected clients if they have subscribed for publishable topics.</li>
+</ul>
+
 <h3>
-<a id="921-publish" class="anchor" href="#921-publish" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.2.1. PUBLISH</h3>
+<a id="941-publish" class="anchor" href="#941-publish" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.4.1. PUBLISH</h3>
 
 <p>When a Publisher requests to publish an event to some topic, it sends a "PUBLISH" message to a Broker:</p>
 
@@ -1202,7 +1486,7 @@ In case of receiving a "SUBSCRIBE" message from the same Subscriber and to alrea
 <p>"Options" is a dictionary that allows to provide additional publication request details in an extensible way. This is described further below.</p>
 
 <p>If the Broker is able to fulfill and allowing the publication, the Broker will send the event to all current Subscribers of the topic of the published event.
-Publications are acknowledged, and the Broker will respond, depends the publication was successful indeed or not. </p>
+Publications are acknowledged, and the Broker will respond, depends the publication was successful indeed or not.</p>
 
 <p><em>Example</em></p>
 
@@ -1216,8 +1500,17 @@ Publications are acknowledged, and the Broker will respond, depends the publicat
 
 <p><code>[16, 239714735, "com.myapp.mytopic1", {"color": "orange", "sizes": [23, 42, 7]}]</code></p>
 
+<h4>
+<a id="best-practice-1" class="anchor" href="#best-practice-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Best Practice</h4>
+
+<p>Use Publish when …</p>
+
+<ul>
+<li>It is critical to your application to receive all messages exactly once. This is often the case if a duplicate delivery would do harm to application users or subscribing clients. You should be aware of the overhead and that it takes a bit longer to complete the publish flow.</li>
+</ul>
+
 <h3>
-<a id="922-published" class="anchor" href="#922-published" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.2.2. PUBLISHED</h3>
+<a id="942-published" class="anchor" href="#942-published" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.4.2. PUBLISHED</h3>
 
 <p>If the Broker is able to fulfill and allowing the publication of PUBLISH message, the Broker replies by sending a "PUBLISHED" message to the Publisher:</p>
 
@@ -1234,7 +1527,7 @@ Publications are acknowledged, and the Broker will respond, depends the publicat
 <p><code>[17, 239714735, 4429313566]</code></p>
 
 <h3>
-<a id="923-publish-error" class="anchor" href="#923-publish-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.2.3. Publish ERROR</h3>
+<a id="943-publish-error" class="anchor" href="#943-publish-error" aria-hidden="true"><span class="octicon octicon-link"></span></a>9.4.3. Publish ERROR</h3>
 
 <p>When the PUBLISH request for publication cannot be fulfilled by the Broker, the Broker sends back an "ERROR" message to the Publisher</p>
 
@@ -1284,7 +1577,7 @@ Publications are acknowledged, and the Broker will respond, depends the publicat
 
 <p>"Procedure" is the URI of the procedure to be called.</p>
 
-<p>"Arguments" is a list of positional call arguments (each of arbitrary type) or dictionary of keyword call arguments. The Arguments may be empty or omitted. </p>
+<p>"Arguments" is a list of positional call arguments (each of arbitrary type) or dictionary of keyword call arguments. The Arguments may be empty or omitted.</p>
 
 <p><em>Example</em></p>
 
@@ -1539,7 +1832,7 @@ A join, call, register, publish or subscribe failed, since the Peer is not autho
 </thead>
 <tbody>
 <tr>
-<td><code>[ANOUNCE, 0, "",["TemperatureSensor`Smart Termometer%1.0#A2DF31CD@NSC Communication Siberia`:Sensor","getTemp&amp;i`Temperature$degrees`()","Temp!s`My ID`i`Temperature$degrees`"] ]"]</code></td>
+<td><code>[ANNOUNCE, 0, "",["TemperatureSensor`Smart Termometer%1.0#A2DF31CD@NSC Communication Siberia`:Sensor","getTemp&amp;i`Temperature$degrees`()","Temp!s`My ID`i`Temperature$degrees`"] ]"]</code></td>
 <td><code>[ACCEPTED, 0]</code></td>
 </tr>
 <tr>
