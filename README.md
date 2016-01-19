@@ -364,7 +364,7 @@ Sent by a Publisher to a Subscriber/Broker to publish an event with acknowledge 
 
 Acknowledge sent by a Broker to a Publisher for acknowledged publications.
 
-`[PUBLISHED, Request|id, Publication|id, Options|dict]`
+`[PUBLISHED, Request|id, Options|dict]`
 
 #### 6.4.2.3. SUBSCRIBE
 
@@ -372,19 +372,17 @@ Subscribe request sent by a Subscriber to a Broker to subscribe to a topic.
 
 `[SUBSCRIBE, Request|id, Topic|uri, Options|dict]`
 
-#### 6.4.2.3. SUBSCRIBE
+#### 6.4.2.3. SUBSCRIBED
 
-Subscribe request sent by a Subscriber to a Broker to subscribe to a topic.
+Subscribe request was accepted.
 
-`[SUBSCRIBED, Request|id, SubscriptionId|id, Options|dict]`
+`[SUBSCRIBED, Request|id, Options|dict]`
 
 #### 6.4.2.5. UNSUBSCRIBE
 
 Unsubscribe request sent by a Subscriber to a Broker to unsubscribe a subscription.
 
-`[UNSUBSCRIBE, Request|id, SUBSCRIBED.SubscriptionId|id, Options|dict]`
 `[UNSUBSCRIBE, Request|id, Topic|uri, Options|dict]`
-
 
 #### 6.4.2.4. UNSUBSCRIBED
 
@@ -460,9 +458,8 @@ Result of a call as returned to Caller if the error occur during call execution.
 | 15 | [PUBLISHED, Request\|id, Publication\|id, Options\|dict] | event acknowledged
 | | subscribe
 | 16 | [SUBSCRIBE, SUBSCRIBE.Request\|id, Topic\|uri, Options\|dict] | subscribe
-| 17 | [SUBSCRIBED, Request\|id, SubscriptionId\|id, Options\|dict] | subscription confirmed
+| 17 | [SUBSCRIBED, Request\|id, Options\|dict] | subscription confirmed
 | 18 | [UNSUBSCRIBE, Request\|id, Topic\|uri, Options\|dict]
-| 19 | [UNSUBSCRIBE_BY_ID, Request\|id, SUBSCRIBED.SubscriptionId\|id, Options\|dict] | unsibscribe
 | 20 | [UNSUBSCRIBED, UNSUBSCRIBE.Request\|id, Options\|dict]
 |  | announcement
 | 21 | [ANNOUNCE, Request\|id, Topic\|uri, description\|list, Options\|dict] | announce interface or event
@@ -859,7 +856,6 @@ The message flow between Clients implementing the role of Subscriber and Routers
 
 1. "SUBSCRIBE"
 2. "SUBSCRIBED"
-3. "Subscribe ERROR"
 3. "UNSUBSCRIBE"
 4. "UNSUBSCRIBED"
 5. "ERROR"
@@ -893,7 +889,7 @@ A Broker, receiving a "SUBSCRIBE" message, can fullfill or reject the subscripti
 
 If the Broker is able to fulfill and allow the subscription, it answers by sending a "SUBSCRIBED" message to the Subscriber
 
-`[SUBSCRIBED, SUBSCRIBE.Request|id, Subscription|id]`
+`[SUBSCRIBED, SUBSCRIBE.Request|id]`
 
 where
 
@@ -903,7 +899,7 @@ where
 
 _Example_
 
-`[33, 713845233, 5512315355]`
+`[33, 713845233]`
 
 Note. The "Subscription" ID chosen by the broker need not be unique to the subscription of a single Subscriber, but may be assigned to the "Topic", or the combination of the "Topic" and some or all "Options", such as the topic pattern matching method to be used. Then this ID may be sent to all Subscribers for the "Topic" or "Topic" / "Options" combination. This allows the Broker to serialize an event to be delivered only once for all actual receivers of the event.
 In case of receiving a "SUBSCRIBE" message from the same Subscriber and to already subscribed topic, Broker should answer with "SUBSCRIBED" message, containing the existing "Subscription|id".
@@ -929,7 +925,7 @@ _Example_
 ### 9.3.4. UNSUBSCRIBE
 When a Subscriber is no longer interested in receiving events for a subscription it sends an "UNSUBSCRIBE" message
 
-`[UNSUBSCRIBE, Request|id, SUBSCRIBED.Subscription|id]`
+`[UNSUBSCRIBE, Request|id, , Topic|uri, Options|dict]`
 
 where
 
@@ -939,7 +935,7 @@ where
 
 _Example_
 
-`[34, 85346237, 5512315355]`
+`[34, 85346237, "com.myapp.mytopic1"]`
 
 ### 9.3.5. UNSUBSCRIBED
 
