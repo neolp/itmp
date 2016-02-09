@@ -433,35 +433,35 @@ Result of a call as returned to Caller if the error occur during call execution.
 
 | code | Format | desc |
 | ---- | ----------- | -------- |
-| | Connection
+| | __Connection__
 | 0 | [CONNECT, Connection\|id, Realm\|uri, Details\|dict] | open connection |
 | 2 | [PARAMETERS, CONNECT.Connection\|id, Details\|dict] | privide additional parameters for proper connection
 | 1 | [CONNECTED, CONNECT.Connection\|id, Session\|id, Details\|dict] | confirm connection
 | 2 | [ABORT, Code\|integer, Reason\|string, Details\|dict] | terminate connection
 | 3 | [DISCONNECT, Code\|integer, Reason\|string, Details\|dict] |  clear finish connection
-| | Information
+| | __Information__
 | 4 | [KEEP_ALIVE]	keep alive
 | 5 | [ERROR, Request\|id, Code\|integer, Reason\|string, Details\|dict] | error notificarion
-| | Description
+| | __Description__
 | 6 | [DESCRIBE, Request\|id, Topic\|uri, Options\|dict] | get description
 | 7 | [DESCRIPTION, DESCRIBE.Request\|id, description\|list, Options\|dict] | description response
-| | RPC
+| | __RPC__
 | 8 | [CALL, Request\|id, Procedure\|uri, Arguments, Options\|dict] | call
 | 9 | [RESULT, CALL.Request\|id, Result, Details\|dict] | call response
-|  | RPC Extended
+|  | __RPC Extended__
 | 10 | [ARGUMENTS, CALL.Request\|id, ARGUMENTS.Sequuence\|integer, Arguments, Options\|dict] | additional arguments for call
 | 11 | [PROGRESS, CALL.Request\|id, PROGRESS.Sequuence\|integer, Result, Details\|dict] | call in progress
 | 12 | [CANCEL, CALL.Request\|id, Details\|dict] | call cancel
-| | publish
+| | __publish__
 | 13 | [EVENT, Request\|id, Topic\|uri, Arguments, Options\|dict] | event
 | 14 | [PUBLISH, Request\|id, Topic\|uri, Arguments, Options\|dict] | event with acknowledge awaiting
 | 15 | [PUBLISHED, Request\|id, Publication\|id, Options\|dict] | event acknowledged
-| | subscribe
+| | __subscribe__
 | 16 | [SUBSCRIBE, SUBSCRIBE.Request\|id, Topic\|uri, Options\|dict] | subscribe
 | 17 | [SUBSCRIBED, Request\|id, Options\|dict] | subscription confirmed
 | 18 | [UNSUBSCRIBE, Request\|id, Topic\|uri, Options\|dict]
 | 20 | [UNSUBSCRIBED, UNSUBSCRIBE.Request\|id, Options\|dict]
-|  | announcement
+|  | __announcement__
 | 21 | [ANNOUNCE, Request\|id, Topic\|uri, description\|list, Options\|dict] | announce interface or event
 | 22 | [ACCEPTED, ANNOUNCE.Request\|id, Options\|dict] | accept announcement
 
