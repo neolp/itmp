@@ -260,9 +260,9 @@ The diagram below illustrates the full transport connection and session lifecycl
 # 6. Messages
 
 All ITMP messages are a "list" with a first element "MessageType" followed by one or more message type specific elements:
-[MessageType|integer, ... one or more message type specific elements ...]
+[MessageType:integer, ... one or more message type specific elements ...]
 
-The notation "Element|type" denotes a message element named "Element" of type "type", where "type" is one of
+The notation "Element:type" denotes a message element named "Element" of type "type", where "type" is one of
 
 * "uri": a string URI as defined in Section 5.1.1
 * "id": an integer ID as defined in Section 5.1.2
@@ -276,7 +276,7 @@ _Example_
 
 A "SUBSCRIBE" message has the following format
 
-`[SUBSCRIBE, Request|id, Topic|uri, Options|dict]`
+`[SUBSCRIBE, Request:id, Topic:uri, Options:dict]`
 
 Here is an example message conforming to the above format
 
@@ -284,7 +284,7 @@ Here is an example message conforming to the above format
 
 ## 6.1. Extensibility
 
-Some ITMP messages contain "Options|dict" or "Details|dict" elements. This allows for future extensibility and implementations that only provide subsets of functionality by ignoring unimplemented attributes. Keys in "Options" and "Details" MUST be of type "string" and MUST match the regular expression "[a-z][a-z0-9_]{2,}" for ITMP predefined keys. Implementations MAY use implementation-specific keys that MUST match the regular expression "[a-z0-9_]{3,}". Attributes unknown to an implementation MUST be ignored.
+Some ITMP messages contain "Options:dict" or "Details:dict" elements. This allows for future extensibility and implementations that only provide subsets of functionality by ignoring unimplemented attributes. Keys in "Options" and "Details" MUST be of type "string" and MUST match the regular expression "[a-z][a-z0-9_]{2,}" for ITMP predefined keys. Implementations MAY use implementation-specific keys that MUST match the regular expression "[a-z0-9_]{3,}". Attributes unknown to an implementation MUST be ignored.
 
 ## 6.2. Polymorphism
 
@@ -303,7 +303,7 @@ ITMP not always uses sessions and in some implementation based on datagram trans
 
 Sent by a Client to initiate opening of a ITMP session to a Server attaching to a Realm.
 
-`[CONNECT, Connection|id, Realm|uri, Details|dict]`
+`[CONNECT, Connection:id, Realm:uri, Details:dict]`
 
 in trusted environment CONNECT can be omitted, then client by default connected to empty ralm without extended features, mostly it is important to small mobile nodes without persistent connection
 
@@ -313,7 +313,7 @@ in trusted environment CONNECT can be omitted, then client by default connected 
 
 Sent by a Server to accept a Client. The ITMP session is now open.
 
-`[CONNECTED, CONNECT.Connection|id, Session|id, Details|dict]`
+`[CONNECTED, CONNECT.Connection:id, Session:id, Details:dict]`
 
 Session is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for securing connection
 
@@ -322,13 +322,13 @@ Session is a random number and can be used to distinguish separate connection at
 
 Sent by a Peer to abort the opening of a ITMP session. No response is expected.
 
-`[ABORT, Code|integer, Reason|string, Details|dict]`
+`[ABORT, Code:integer, Reason:string, Details:dict]`
 
 #### 6.4.1.4. DISCONNECT
 
 Sent by a Peer to close a previously opened ITMP session. Must be echo'ed by the receiving Peer.
 
-`[DISCONNECT, Code|integer, Reason|string, Details|dict]`
+`[DISCONNECT, Code:integer, Reason:string, Details:dict]`
 
 ### 6.4.2. Service discovering
 
@@ -336,13 +336,13 @@ Sent by a Peer to close a previously opened ITMP session. Must be echo'ed by the
 
 Sent by peer to other peer to get peer/function/event description
 
-`[DESCRIBE, Request|id, Topic|uri, Options|dict]`
+`[DESCRIBE, Request:id, Topic:uri, Options:dict]`
 
 #### 6.4.2.1. DESCRIPTION
 
 Sent by peer as answer to DESCRIBE message
 
-`[DESCRIPTION, Request|id, description|list, Options|dict]`
+`[DESCRIPTION, Request:id, description:list, Options:dict]`
 
 ### 6.4.2. Publish & Subscribe
 
@@ -350,45 +350,45 @@ Sent by peer as answer to DESCRIBE message
 
 Sent by a Publisher to a Subscriber/Broker to publish an event without acknowledge.
 
-`[EVENT, Request|id, Topic|uri, Arguments, Options|dict]`
+`[EVENT, Request:id, Topic:uri, Arguments, Options:dict]`
 
-An event is dispatched to a Subscriber for a given "Subscription|id" only once. On the other hand, a Subscriber that holds subscriptions with different "Subscription|id"s that all match a given event will receive the event on each matching subscription.
+An event is dispatched to a Subscriber for a given "Subscription:id" only once. On the other hand, a Subscriber that holds subscriptions with different "Subscription:id"s that all match a given event will receive the event on each matching subscription.
 
 #### 6.4.2.1. PUBLISH
 
 Sent by a Publisher to a Subscriber/Broker to publish an event with acknowledge awaiting.
 
-`[PUBLISH, Request|id, Topic|uri, Arguments, Options|dict]`
+`[PUBLISH, Request:id, Topic:uri, Arguments, Options:dict]`
 
 #### 6.4.2.2. PUBLISHED
 
 Acknowledge sent by a Broker to a Publisher for acknowledged publications.
 
-`[PUBLISHED, Request|id, Options|dict]`
+`[PUBLISHED, Request:id, Options:dict]`
 
 #### 6.4.2.3. SUBSCRIBE
 
 Subscribe request sent by a Subscriber to a Broker to subscribe to a topic.
 
-`[SUBSCRIBE, Request|id, Topic|uri, Options|dict]`
+`[SUBSCRIBE, Request:id, Topic:uri, Options:dict]`
 
 #### 6.4.2.3. SUBSCRIBED
 
 Subscribe request was accepted.
 
-`[SUBSCRIBED, Request|id, Options|dict]`
+`[SUBSCRIBED, Request:id, Options:dict]`
 
 #### 6.4.2.5. UNSUBSCRIBE
 
 Unsubscribe request sent by a Subscriber to a Broker to unsubscribe a subscription.
 
-`[UNSUBSCRIBE, Request|id, Topic|uri, Options|dict]`
+`[UNSUBSCRIBE, Request:id, Topic:uri, Options:dict]`
 
 #### 6.4.2.4. UNSUBSCRIBED
 
 Acknowledge sent by a Broker to a Subscriber to acknowledge a unsubscription.
 
-`[UNSUBSCRIBED, UNSUBSCRIBE.Request|id, Options|dict]`
+`[UNSUBSCRIBED, UNSUBSCRIBE.Request:id, Options:dict]`
 
 ### 6.4.3. Remote Procedure Calls
 
@@ -396,37 +396,37 @@ Acknowledge sent by a Broker to a Subscriber to acknowledge a unsubscription.
 
 Call as originally issued by the Caller.
 
-`[CALL, Request|id, Procedure|uri, Arguments, Options|dict]`
+`[CALL, Request:id, Procedure:uri, Arguments, Options:dict]`
 
 #### 6.4.3.2. ARGUMENTS
 
 Provide additional arguments to the call to Callee during call execution.
 
-`[ARGUMENTS, CALL.Request|id, Arguments, Options|dict]`
+`[ARGUMENTS, CALL.Request:id, Arguments, Options:dict]`
 
 #### 6.4.3.2. PROGRESS
 
 Result of a call progress returned to Caller during call execution.
 
-`[PROGRESS, CALL.Request|id, Result, Details|dict]`
+`[PROGRESS, CALL.Request:id, Result, Details:dict]`
 
 #### 6.4.3.2. CANCEL
 
 Cancel the previously called function.
 
-`[CANCEL, CALL.Request|id, Details|dict]`
+`[CANCEL, CALL.Request:id, Details:dict]`
 
 #### 6.4.3.2. RESULT
 
 Result of a call as returned to Caller.
 
-`[RESULT, CALL.Request|id, Result, Details|dict]`
+`[RESULT, CALL.Request:id, Result, Details:dict]`
 
 #### 6.4.3.2. ERROR
 
 Result of a call as returned to Caller if the error occur during call execution.
 
-`[ERROR, CALL.Request|id, error code|integer, TextError|string, Details|dict]`
+`[ERROR, CALL.Request:id, error code:integer, TextError:string, Details:dict]`
 
 ### 6.4.4. List of all messages and codes
 
@@ -434,36 +434,36 @@ Result of a call as returned to Caller if the error occur during call execution.
 | code | Format | desc |
 | ---- | ----------- | -------- |
 | | __Connection__
-| 0 | [CONNECT, Connection\|id, Realm\|uri, Details\|dict] | open connection |
-| 2 | [PARAMETERS, CONNECT.Connection\|id, Details\|dict] | privide additional parameters for proper connection
-| 1 | [CONNECTED, CONNECT.Connection\|id, Session\|id, Details\|dict] | confirm connection
-| 2 | [ABORT, Code\|integer, Reason\|string, Details\|dict] | terminate connection
-| 3 | [DISCONNECT, Code\|integer, Reason\|string, Details\|dict] |  clear finish connection
+| 0 | [CONNECT, Connection:id, Realm:uri, Details:dict] | open connection |
+| 2 | [PARAMETERS, CONNECT.Connection:id, Details:dict] | privide additional parameters for proper connection
+| 1 | [CONNECTED, CONNECT.Connection:id, Session:id, Details:dict] | confirm connection
+| 2 | [ABORT, Code:integer, Reason:string, Details:dict] | terminate connection
+| 3 | [DISCONNECT, Code:integer, Reason:string, Details:dict] |  clear finish connection
 | | __Information__
 | 4 | [KEEP_ALIVE]	keep alive
-| 5 | [ERROR, Request\|id, Code\|integer, Reason\|string, Details\|dict] | error notificarion
+| 5 | [ERROR, Request:id, Code:integer, Reason:string, Details:dict] | error notificarion
 | | __Description__
-| 6 | [DESCRIBE, Request\|id, Topic\|uri, Options\|dict] | get description
-| 7 | [DESCRIPTION, DESCRIBE.Request\|id, description\|list, Options\|dict] | description response
+| 6 | [DESCRIBE, Request:id, Topic:uri, Options:dict] | get description
+| 7 | [DESCRIPTION, DESCRIBE.Request:id, description:list, Options:dict] | description response
 | | __RPC__
-| 8 | [CALL, Request\|id, Procedure\|uri, Arguments, Options\|dict] | call
-| 9 | [RESULT, CALL.Request\|id, Result, Details\|dict] | call response
+| 8 | [CALL, Request:id, Procedure:uri, Arguments, Options:dict] | call
+| 9 | [RESULT, CALL.Request:id, Result, Details:dict] | call response
 |  | __RPC Extended__
-| 10 | [ARGUMENTS, CALL.Request\|id, ARGUMENTS.Sequuence\|integer, Arguments, Options\|dict] | additional arguments for call
-| 11 | [PROGRESS, CALL.Request\|id, PROGRESS.Sequuence\|integer, Result, Details\|dict] | call in progress
-| 12 | [CANCEL, CALL.Request\|id, Details\|dict] | call cancel
+| 10 | [ARGUMENTS, CALL.Request:id, ARGUMENTS.Sequuence:integer, Arguments, Options:dict] | additional arguments for call
+| 11 | [PROGRESS, CALL.Request:id, PROGRESS.Sequuence:integer, Result, Details:dict] | call in progress
+| 12 | [CANCEL, CALL.Request:id, Details:dict] | call cancel
 | | __publish__
-| 13 | [EVENT, Request\|id, Topic\|uri, Arguments, Options\|dict] | event
-| 14 | [PUBLISH, Request\|id, Topic\|uri, Arguments, Options\|dict] | event with acknowledge awaiting
-| 15 | [PUBLISHED, Request\|id, Publication\|id, Options\|dict] | event acknowledged
+| 13 | [EVENT, Request:id, Topic:uri, Arguments, Options:dict] | event
+| 14 | [PUBLISH, Request:id, Topic:uri, Arguments, Options:dict] | event with acknowledge awaiting
+| 15 | [PUBLISHED, Request:id, Publication:id, Options:dict] | event acknowledged
 | | __subscribe__
-| 16 | [SUBSCRIBE, SUBSCRIBE.Request\|id, Topic\|uri, Options\|dict] | subscribe
-| 17 | [SUBSCRIBED, Request\|id, Options\|dict] | subscription confirmed
-| 18 | [UNSUBSCRIBE, Request\|id, Topic\|uri, Options\|dict]
-| 20 | [UNSUBSCRIBED, UNSUBSCRIBE.Request\|id, Options\|dict]
+| 16 | [SUBSCRIBE, SUBSCRIBE.Request:id, Topic:uri, Options:dict] | subscribe
+| 17 | [SUBSCRIBED, Request:id, Options:dict] | subscription confirmed
+| 18 | [UNSUBSCRIBE, Request:id, Topic:uri, Options:dict]
+| 20 | [UNSUBSCRIBED, UNSUBSCRIBE.Request:id, Options:dict]
 |  | __announcement__
-| 21 | [ANNOUNCE, Request\|id, Topic\|uri, description\|list, Options\|dict] | announce interface or event
-| 22 | [ACCEPTED, ANNOUNCE.Request\|id, Options\|dict] | accept announcement
+| 21 | [ANNOUNCE, Request:id, Topic:uri, description:list, Options:dict] | announce interface or event
+| 22 | [ACCEPTED, ANNOUNCE.Request:id, Options:dict] | accept announcement
 
 ## 6.6. Extension Messages
 
@@ -474,11 +474,11 @@ ITMP uses type codes from the core range [0, 22]. Implementations MAY define and
 Implementations SHOULD avoid sending empty "Details" dicts.
 E.g. a "CALL" message
 
-`[CALL, Request|id, Procedure|uri, Arguments, Options|dict]`
+`[CALL, Request:id, Procedure:uri, Arguments, Options:dict]`
 
 where " Options == {}" SHOULD be avoided, and instead
 
-`[CALL, Request|id, Procedure|uri, Arguments]`
+`[CALL, Request:id, Procedure:uri, Arguments]`
 
 SHOULD be sent.
 
@@ -487,11 +487,11 @@ SHOULD be sent.
 Implementations SHOULD avoid sending empty "Arguments" lists if Options is empty.
 E.g. a "CALL" message
 
-`[CALL, Request|id, Procedure|uri, Arguments]`
+`[CALL, Request:id, Procedure:uri, Arguments]`
 
 where "Arguments == []" SHOULD be avoided, and instead
 
-`[CALL, Request|id, Procedure|uri]`
+`[CALL, Request:id, Procedure:uri]`
 
 SHOULD be sent.
 
@@ -510,7 +510,7 @@ The message flow between Clients and Routers for opening and closing ITMP sessio
 
 After the underlying transport has been established, the opening of a ITMP session is initiated by the Client sending a "CONNECT" message to the Router
 
-`[CONNECT, Realm|uri, Details|dict]`
+`[CONNECT, Realm:uri, Details:dict]`
 
 where
 
@@ -526,7 +526,7 @@ It is a protocol error to receive a second "CONNECT" message during the lifetime
 #### 7.1.1.1. Client: Role and Feature Announcement
 
 ITMP uses _Role & Feature announcement_ instead of _protocol versioning_ to allow implementations only supporting subsets of functionality future extensibility
-A Client must announce the roles it supports via "Connect.Details.roles|dict", with a key mapping to a "Connect.Details.roles.<role>|dict" where "<role>" can be:
+A Client must announce the roles it supports via "Connect.Details.roles:dict", with a key mapping to a "Connect.Details.roles.<role>:dict" where "<role>" can be:
 
 * "publisher"
 * "subscriber"
@@ -534,7 +534,7 @@ A Client must announce the roles it supports via "Connect.Details.roles|dict", w
 * "callee"
 
 A Client can support any combination of the above roles but must support at least one role.
-The "<role>|dict" is a dictionary describing features supported by the peer for that role.
+The "<role>:dict" is a dictionary describing features supported by the peer for that role.
 This MUST be empty for ITMP Basic Profile implementations, and MUST be used by implementations implementing parts of the Advanced Profile to list the specific set of features they support.
 
 _Example: A Client that implements the Publisher and Subscriber roles of the ITMP Basic Profile._
@@ -552,7 +552,7 @@ _Example: A Client that implements the Publisher and Subscriber roles of the ITM
 
 A Router completes the opening of a ITMP session by sending a "CONNECTED" reply message to the Client.
 
-`[CONNECTED, Session|id, Details|dict]`
+`[CONNECTED, Session:id, Details:dict]`
 
 where
 "Session" MUST be a randomly generated ID specific to the ITMP session. This applies for the lifetime of the session.
@@ -563,7 +563,7 @@ Note. The behavior if a requested "Realm" does not presently exist is router-spe
 #### 7.1.2.1. Router: Role and Feature Announcement
 
 Similar to a Client announcing Roles and Features supported in the "CONNECT" message, a Router announces its supported Roles and Features in the "CONNECTED" message.
-A Router MUST announce the roles it supports via "Connected.Details.roles|dict", with a key mapping to a "Connected.Details.roles.<role>|dict" where "<role>" can be:
+A Router MUST announce the roles it supports via "Connected.Details.roles:dict", with a key mapping to a "Connected.Details.roles.<role>:dict" where "<role>" can be:
 
 * "broker"
 * "dealer"
@@ -573,7 +573,7 @@ A Router MUST announce the roles it supports via "Connected.Details.roles|dict",
 * "callee"
 
 A Router must support at least one role, and MAY support all roles.
-The "<role>|dict" is a dictionary describing features supported by the peer for that role. With ITMP Basic Profile implementations, this MUST be empty, but MUST be used by implementations implementing parts of the Advanced Profile to list the specific set of features they support
+The "<role>:dict" is a dictionary describing features supported by the peer for that role. With ITMP Basic Profile implementations, this MUST be empty, but MUST be used by implementations implementing parts of the Advanced Profile to list the specific set of features they support
 
 _Example: A Router implementing the Broker role of the ITMP Basic Profile._
 
@@ -589,7 +589,7 @@ _Example: A Router implementing the Broker role of the ITMP Basic Profile._
 
 Both the Router and the Client may abort the opening of a ITMP session by sending an "ABORT" message.
 
-`[ABORT, Code|integer, Reason|string, Details|dict]`
+`[ABORT, Code:integer, Reason:string, Details:dict]`
 
 where
 
@@ -603,7 +603,7 @@ No response to an "ABORT" message is expected.
 
 A ITMP session starts its lifetime with the Router sending a "CONNECTED" message to the Client and ends when the underlying transport disappears or when the ITMP session is closed explicitly by a "DISCONNECT" message sent by one Peer and a "DISCONNECT" message sent from the other Peer in response.
 
-`[DISCONNECT, Code|integer, Reason|string, Details|dict]`
+`[DISCONNECT, Code:integer, Reason:string, Details:dict]`
 
 where
 
@@ -640,11 +640,11 @@ Though "ABORT" and "DISCONNECT" are structurally identical, using different mess
 When a software agent operates in a network protocol, it often identifies itself, its application type, operating system, software vendor, or software revision, by submitting a characteristic identification string to its operating peer.
 Similar to what browsers do with the "User-Agent" HTTP header, both the "CONNECT" and the "CONNECTED" message MAY disclose the ITMP implementation in use to its peer:
 
-CONNECT.Details.agent|string
+CONNECT.Details.agent:string
 
 and
 
-CONNECTED.Details.agent|string
+CONNECTED.Details.agent:string
 
 _Example: A Client "CONNECT" message._
 
@@ -863,13 +863,13 @@ The message flow between Clients implementing the role of Subscriber and Routers
 A Subscriber may subscribe to zero, one or more topics, and a Publisher publishes to topics without knowledge of subscribers.
 Upon subscribing to a topic via the "SUBSCRIBE" message, a Subscriber will receive any future events published to the respective topic by Publishers, and will receive those events asynchronously.
 A subscription lasts for the duration of a session, unless a Subscriber opts out from a previously established subscription via the "UNSUBSCRIBE" message.
-A Subscriber may have more than one event handler attached to the same subscription. This can be implemented in different ways: a) a Subscriber can recognize itself that it is already subscribed and just attach another handler to the subscription for incoming events, b) or it can send a new "SUBSCRIBE" message to broker (as it would be first) and upon receiving a "SUBSCRIBED.Subscription|id" it already knows about, attach the handler to the existing subscription
+A Subscriber may have more than one event handler attached to the same subscription. This can be implemented in different ways: a) a Subscriber can recognize itself that it is already subscribed and just attach another handler to the subscription for incoming events, b) or it can send a new "SUBSCRIBE" message to broker (as it would be first) and upon receiving a "SUBSCRIBED.Subscription:id" it already knows about, attach the handler to the existing subscription
 
 ### 9.3.1. SUBSCRIBE
 
 A Subscriber communicates its interest in a topic to a Broker by sending a "SUBSCRIBE" message:
 
-`[SUBSCRIBE, Request|id, Topic|uri, Options|dict]`
+`[SUBSCRIBE, Request:id, Topic:uri, Options:dict]`
 
 where
 
@@ -889,7 +889,7 @@ A Broker, receiving a "SUBSCRIBE" message, can fullfill or reject the subscripti
 
 If the Broker is able to fulfill and allow the subscription, it answers by sending a "SUBSCRIBED" message to the Subscriber
 
-`[SUBSCRIBED, SUBSCRIBE.Request|id]`
+`[SUBSCRIBED, SUBSCRIBE.Request:id]`
 
 where
 
@@ -902,13 +902,13 @@ _Example_
 `[33, 713845233]`
 
 Note. The "Subscription" ID chosen by the broker need not be unique to the subscription of a single Subscriber, but may be assigned to the "Topic", or the combination of the "Topic" and some or all "Options", such as the topic pattern matching method to be used. Then this ID may be sent to all Subscribers for the "Topic" or "Topic" / "Options" combination. This allows the Broker to serialize an event to be delivered only once for all actual receivers of the event.
-In case of receiving a "SUBSCRIBE" message from the same Subscriber and to already subscribed topic, Broker should answer with "SUBSCRIBED" message, containing the existing "Subscription|id".
+In case of receiving a "SUBSCRIBE" message from the same Subscriber and to already subscribed topic, Broker should answer with "SUBSCRIBED" message, containing the existing "Subscription:id".
 
 ### 9.3.3. Subscribe ERROR
 
 When the request for subscription cannot be fulfilled by the Broker, the Broker sends back an "ERROR" message to the Subscriber
 
-`[ERROR, SUBSCRIBE.Request|id, Code|integer, Description|string, Details|dict]`
+`[ERROR, SUBSCRIBE.Request:id, Code:integer, Description:string, Details:dict]`
 
 where
 
@@ -925,7 +925,7 @@ _Example_
 ### 9.3.4. UNSUBSCRIBE
 When a Subscriber is no longer interested in receiving events for a subscription it sends an "UNSUBSCRIBE" message
 
-`[UNSUBSCRIBE, Request|id, , Topic|uri, Options|dict]`
+`[UNSUBSCRIBE, Request:id, , Topic:uri, Options:dict]`
 
 where
 
@@ -941,7 +941,7 @@ _Example_
 
 Upon successful unsubscription, the Broker sends an "UNSUBSCRIBED" message to the Subscriber
 
-`[UNSUBSCRIBED, UNSUBSCRIBE.Request|id]`
+`[UNSUBSCRIBED, UNSUBSCRIBE.Request:id]`
 
 where
 
@@ -955,7 +955,7 @@ _Example_
 
 When the request fails, the Broker sends an "ERROR"
 
-`[ERROR, UNSUBSCRIBE.Request|id, Code|integer, Description|string, Details|dict]`
+`[ERROR, UNSUBSCRIBE.Request:id, Code:integer, Description:string, Details:dict]`
 
 where
 
@@ -982,7 +982,7 @@ The message flow between Publishers, a Broker and Subscribers for publishing to 
 
 When a Publisher requests to publish an event to some topic, it sends a "EVENT" message to a Broker:
 
-`[EVENT, Request|id, Topic|uri, Arguments, Options|dict]`
+`[EVENT, Request:id, Topic:uri, Arguments, Options:dict]`
 
 where
 
@@ -1020,7 +1020,7 @@ Use Event when …
 
 When a Publisher requests to publish an event to some topic, it sends a "PUBLISH" message to a Broker:
 
-`[PUBLISH, Request|id, Topic|uri, Arguments, Options|dict]`
+`[PUBLISH, Request:id, Topic:uri, Arguments, Options:dict]`
 
 where
 
@@ -1057,7 +1057,7 @@ Use Publish when …
 
 If the Broker is able to fulfill and allowing the publication of PUBLISH message, the Broker replies by sending a "PUBLISHED" message to the Publisher:
 
-`[PUBLISHED, PUBLISH.Request|id, Publication|id]`
+`[PUBLISHED, PUBLISH.Request:id, Publication:id]`
 
 where
 
@@ -1073,7 +1073,7 @@ _Example_
 
 When the PUBLISH request for publication cannot be fulfilled by the Broker, the Broker sends back an "ERROR" message to the Publisher
 
-`[ERROR, PUBLISH.Request|id, Code|integer, Description|string, Details|dict]`
+`[ERROR, PUBLISH.Request:id, Code:integer, Description:string, Details:dict]`
 
 where
 
@@ -1103,7 +1103,7 @@ The execution of remote procedure calls is asynchronous, and there may be more t
 
 When a Caller wishes to call a remote procedure, it sends a "CALL" message to a Dealer:
 
-`[CALL, Request|id, Procedure|uri, Arguments, Options|dict]`
+`[CALL, Request:id, Procedure:uri, Arguments, Options:dict]`
 
 where
 
@@ -1135,7 +1135,7 @@ _Example_
 
 If the Callee is able to successfully process and finish the execution of the call, it answers by sending a "RESULT" message to the Dealer:
 
-`[RESULT, CALL.Request|id, Arguments, Options|dict]`
+`[RESULT, CALL.Request:id, Arguments, Options:dict]`
 
 where
 
@@ -1165,7 +1165,7 @@ _Example_
 
 If the Callee is unable to process or finish the execution of the call, or the application code implementing the procedure raises an exception or otherwise runs into an error, the Callee sends an "ERROR" message to the Dealer:
 
-`[ERROR, CALL.Request|id, Code|integer, Description|string, Details|dict]`
+`[ERROR, CALL.Request:id, Code:integer, Description:string, Details:dict]`
 
 where
 
