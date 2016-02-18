@@ -1112,6 +1112,7 @@ where
 "Options" is a dictionary that allows to provide additional call request details in an extensible way. This is described further below.
 
 "Procedure" is the URI of the procedure to be called.
+if uri denote event topic, CALL make polling for event and can be used for get an event without subscribing,in such a way RESULT bring Event if so and ERROR will return if no message. 
 
 "Arguments" is a list of positional call arguments (each of arbitrary type) or dictionary of keyword call arguments. The Arguments may be empty or omitted.
 
@@ -1183,19 +1184,23 @@ _Example_
 
 ITMP pre-defines the following error codes. ITMP peers MUST use only the defined error messages.
 
+* 304 Not Modified
+* 306 No Event (if CALL to event topic but no event this time)
+
 * 400 Bad Request
 * 401 Unauthorized
 * 403 Forbidden
 * 404 Not Found
 * 405 Method Not Allowed
 * 406 Not Acceptable
+* 409 Conflict.
+* 410 Gone.
 * 413 Request Entity Too Large
 * 414 Request-URI Too Large
 * 418 I'm a teapot
-* 429 Too Many Requests
 * 419 Format error
 * 420 Type error
-* 421 Reserved...
+* 429 Too Many Requests
 
 * 500 Internal Server Error
 * 501 Not Implemented
