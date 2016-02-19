@@ -461,8 +461,8 @@ Result of a call as returned to Caller if the error occur during call execution.
 | 17 | [SUBSCRIBED, Request:id, Options:dict] | subscription confirmed
 | 18 | [UNSUBSCRIBE, Request:id, Topic:uri, Options:dict]
 | 20 | [UNSUBSCRIBED, UNSUBSCRIBE.Request:id, Options:dict]
+| 21 | [POLL, Request:id, Topic:uri, Options:dict] | ask for an event in selected topic(s)
 |  | __announcement__
-| 21 | [ANNOUNCE, Request:id, Topic:uri, description:list, Options:dict] | announce interface or event
 | 22 | [ACCEPTED, ANNOUNCE.Request:id, Options:dict] | accept announcement
 
 ## 6.6. Extension Messages
@@ -858,6 +858,7 @@ The message flow between Clients implementing the role of Subscriber and Routers
 2. "SUBSCRIBED"
 3. "UNSUBSCRIBE"
 4. "UNSUBSCRIBED"
+6. "POLL"
 5. "ERROR"
 
 A Subscriber may subscribe to zero, one or more topics, and a Publisher publishes to topics without knowledge of subscribers.
@@ -968,6 +969,32 @@ where
 _Example_
 
 `[8, 85346237, 404, "No such subscription"]`
+
+### 9.3.7 POLL
+
+A Subscriber communicates its interest in a topic by sending a "POLL" message:
+
+`[POLL, Request:id, Topic:uri, Options:dict]`
+
+where
+
+"Request" MUST be a random, ephemeral ID chosen by the Subscriber and used to correlate the Broker's response with the request.
+
+"Options" MUST be a dictionary that allows to provide additional subscription request details in a extensible way. This is described further below.
+
+"Topic" is the topic the Subscriber wants to subscribe to and MUST be an URI.
+
+In fact the POLL message it is single-shot Subscription for the topic (or even wildcard)
+
+_Example_
+
+`[21, 713845233, "com.myapp.mytopic1", {}]`
+
+A Broker, receiving a "POLL" message, can send interesting events, so it answers with "EVENT", "PUBLISH" or "ERROR" messages.
+
+ERROR message will be answer for POLL message (and id field will be taken from POLL message)
+
+EVENT and PUBLISH messages will be marked by its own id
 
 ## 9.4. Publishing and Events
 
