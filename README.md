@@ -677,13 +677,14 @@ _Example: A Router "CONNECTED" message._
 <interface name> ::= string
 <container> ::= '*' [ <interface name> [ , <interface name> ] ]
 <func> ::= '&' <return type list> [ ‘(‘ <argument type list> ’)’ ]
-<event> ::= '!' <type list>
+<event> ::= '!' [<description>]<type list>
+<listener> ::= '~' [<description>]<type list>
 <return type list> ::= <type list>
 <argument type list> ::= <type list>
 <type list> ::= [ <type> [ , <type> ] ]
 <type> ::= <simple type> | '['<type list>']' | '{' <prop name> [ '?' ] : <type> [ , <prop name> : <type> ] '}'
 <simple type> ::= <type char> [<description>]
-<description>::='`' [<name>] [<version>] [<UniqueId>] [<units>] [<variants>] [<manufacturer>] [<comments>] '`'
+<description>::='`'[<name>] [<version>] [<UniqueId>] [<units>] [<variants>] [<manufacturer>] [<comments>]'`'
 <version>::=’%’ string
 <UniqueId>::=’#’ string
 <units> ::= '$' string
