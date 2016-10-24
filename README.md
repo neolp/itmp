@@ -290,6 +290,10 @@ Some ITMP messages contain "Options:dict" or "Details:dict" elements. This allow
 
 For a given "MessageType" the expected types are uniquely defined except the arguments. Hence there are polymorphic messages in ITMP.
 
+## 6.3. Routing
+
+If node needs to send message hrough router it add address fileds before command field. Router should test type of first message element and if it is byte or text strings should iterpret it as destination address and if second filed also string it is source address.
+
 ## 6.4. Message Definitions
 
 ITMP defines the following messages that are explained in detail in the following sections.
