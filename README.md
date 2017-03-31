@@ -442,9 +442,8 @@ Result of a call as returned to Caller if the error occur during call execution.
 | 2 | [PARAMETERS, CONNECT.Connection:id, Details:dict] | privide additional parameters for proper connection
 | 1 | [CONNECTED, CONNECT.Connection:id, Session:id, Details:dict] | confirm connection
 | 2 | [ABORT, Code:integer, Reason:string, Details:dict] | terminate connection
-| 3 | [DISCONNECT, Code:integer, Reason:string, Details:dict] |  clear finish connection
-| | __Information__
-| 4 | [KEEP_ALIVE]	keep alive
+| 4 | [DISCONNECT, Code:integer, Reason:string, Details:dict] |  clear finish connection
+| | __Error__
 | 5 | [ERROR, Request:id, Code:integer, Reason:string, Details:dict] | error notificarion
 | | __Description__
 | 6 | [DESCRIBE, Request:id, Topic:uri, Options:dict] | get description
@@ -459,19 +458,19 @@ Result of a call as returned to Caller if the error occur during call execution.
 | | __publish__
 | 13 | [EVENT, Request:id, Topic:uri, Arguments, Options:dict] | event
 | 14 | [PUBLISH, Request:id, Topic:uri, Arguments, Options:dict] | event with acknowledge awaiting
-| 15 | [PUBLISHED, Request:id, Publication:id, Options:dict] | event acknowledged
+| 15 | [PUBLISHED, PUBLISH.Request:id, Publication:id, Options:dict] | event acknowledged
 | | __subscribe__
-| 16 | [SUBSCRIBE, SUBSCRIBE.Request:id, Topic:uri, Options:dict] | subscribe
-| 17 | [SUBSCRIBED, Request:id, Options:dict] | subscription confirmed
+| 16 | [SUBSCRIBE, Request:id, Topic:uri, Options:dict] | subscribe
+| 17 | [SUBSCRIBED, SUBSCRIBE.Request:id, Options:dict] | subscription confirmed
 | 18 | [UNSUBSCRIBE, Request:id, Topic:uri, Options:dict]
 | 20 | [UNSUBSCRIBED, UNSUBSCRIBE.Request:id, Options:dict]
-| 21 | [POLL, Request:id, Topic:uri, Options:dict] | ask for an event in selected topic(s)
-|  | __announcement__
-| 22 | [ACCEPTED, ANNOUNCE.Request:id, Options:dict] | accept announcement
+|  | __keep alive__
+| 33 | [KEEP_ALIVE, Request:id, Options:dict] | keep alive request
+| 34 | [KEEP_ALIVE_RESP, KEEP_ALIVE.Request:id, Options:dict] | keep alive responce
 
 ## 6.6. Extension Messages
 
-ITMP uses type codes from the core range [0, 22]. Implementations MAY define and use implementation specific messages with message type codes from the extension message range [23, 255]. For example, a router MAY implement router-to-router communication by using extension messages.
+ITMP uses type codes from the core range [0, 34]. Implementations MAY define and use implementation specific messages with message type codes from the extension message range [35, 255]. For example, a router MAY implement router-to-router communication by using extension messages.
 
 ## 6.7. Empty Options and Details
 
