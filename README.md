@@ -16,7 +16,7 @@ Another component, a _Publisher_, can then publish messages or events to this to
 Remote Procedure Calls (RPCs) rely on the same sort of decoupling that is used by the Publish & Subscribe pattern. A component, the _Callee_, announces to the router that it provides a certain procedure, identified by a procedure name. Other components, _Callers_, can then call the procedure, with the router invoking the procedure on the Callee, receiving the procedure's result, and then forwarding this result back to the Caller. Routed RPCs differ from traditional client-server RPCs in that the router serves as an intermediary between the Caller and the Callee.
 The decoupling in routed RPCs arises from the fact that the Caller is no longer required to have knowledge of the Callee; it merely needs to know the identifier of the procedure it wants to call. There is
 also no longer a need for a direct connection between the caller and the callee, since all traffic is routed. This enables the calling of procedures in components which are not reachable externally (e.g. on a NATted connection) but which can establish an outgoing connection to the ITMP router.
-Combining these two patterns into a single protocol allows it to be used for the entire messaging requirements of an application, thus reducing technology stack complexity, as well as networking overheads. Adding _discovery_ pattern allows both componments kmow facilities each other.
+Combining these two patterns into a single protocol allows it to be used for the entire messaging requirements of an application, thus reducing technology stack complexity, as well as networking overheads. Adding _discovery_ pattern allows both componments know facilities each other.
 
 ### 1.2. Protocol Overview
 
@@ -72,7 +72,7 @@ The default transport for ITMP is WebSocket [RFC6455], where ITMP is an official
 ## 4. Peers and Roles
 
 A ITMP Session connects two Peers. Each ITMP Peer MUST implement one role, and MAY implement more roles.
-A Client MAY implement any combination of the Roles:
+A Peer MAY implement any combination of the Roles:
 
 * Callee
 * Caller
@@ -152,12 +152,15 @@ To avoid resource naming conflicts, the package naming convention from Java is u
 URI components (the parts between two "."s, the head part up to the first ".", the tail part after the last ".") MUST NOT contain a ".", "#" or whitespace characters and MUST NOT be empty (zero-length strings), except for whole URI that can be an empty string.
 The restriction not to allow "." in component strings is due to the fact that "." is used to separate components, and ITMP associates semantics with resource hierarchies, such as in pattern-based subscriptions. The restriction not to allow empty (zero-length) strings as components is due to the fact that this may be used to denote wildcard components with pattern-based subscriptions and registrations in the Advanced Profile. The character "#" is not allowed since this is reserved for internal use by Brokers.
 As an example, the following regular expression could be used in Python to check URIs according to the above rules:
-```
+
+```regexp
 loose URI check disallowing empty URI components
 pattern = re.compile(r"^([^\s\.#]+\.)*([^\s\.#]+)$")
 ```
+
 When empty URI components are allowed (which is the case for specific messages that are part of the Advanced Profile), this following regular expression can be used (shown used in Python):
-```
+
+```regexp
 loose URI check allowing empty URI components
 pattern = re.compile(r"^(([^\s\.#]+\.)|\.)*([^\s\.#]+)?$")
 ```
@@ -240,7 +243,7 @@ Further, binary data follows a convention for conversion to JSON strings. For de
 
 #### 5.2.2. CBOR
 
-With CBOR serialization, each ITMP message is serialized according to the CBOR specification.
+With CBOR ([RFC 7049](https://tools.ietf.org/html/rfc7049)) serialization, each ITMP message is serialized according to the CBOR specification.
 
 ### 5.3. Transports
 
@@ -290,15 +293,19 @@ The notation "Element:type" denotes a message element named "Element" of type "t
 
 A "SUBSCRIBE" message has the following format
 
-`[SUBSCRIBE, Request:id, Topic:uri, Options:dict]`
+```itmp
+[SUBSCRIBE, Request:id, Topic:uri, Options:dict]
+```
 
 Here is an example message conforming to the above format
 
-`[32, 713845233, "com.myapp.mytopic1", {}]`
+```json
+[16, 713845233, "com.myapp.mytopic1", {}]
+```
 
 ### 6.1. Extensibility
 
-Some ITMP messages contain "Options:dict" or "Details:dict" elements. This allows for future extensibility and implementations that only provide subsets of functionality by ignoring unimplemented attributes. Keys in "Options" and "Details" MUST be of type "string" and MUST match the regular expression "[a-z][a-z0-9_]{2,}" for ITMP predefined keys. Implementations MAY use implementation-specific keys that MUST match the regular expression "[a-z0-9_]{3,}". Attributes unknown to an implementation MUST be ignored.
+Some ITMP messages contain "Options:dict" elements. This allows for future extensibility and implementations that only provide subsets of functionality by ignoring unimplemented attributes. Keys in "Options" MUST be of type "string" and MUST match the regular expression "[a-z][a-z0-9_]{2,}" for ITMP predefined keys. Implementations MAY use implementation-specific keys that MUST match the regular expression "[a-z0-9_]{3,}". Attributes unknown to an implementation MUST be ignored.
 
 ### 6.2. Polymorphism
 
@@ -321,7 +328,9 @@ ITMP not always uses sessions and in some implementation based on datagram trans
 
 Sent by a Client to initiate opening of a ITMP session to a Server attaching to a Realm.
 
-`[CONNECT, Connection:id, Realm:uri, Details:dict]`
+```itmp
+[CONNECT, Connection:id, Realm:uri, Options:dict]
+```
 
 in trusted environment CONNECT can be omitted, then client by default connected to empty ralm without extended features, mostly it is important to small mobile nodes without persistent connection
 
@@ -331,7 +340,9 @@ in trusted environment CONNECT can be omitted, then client by default connected 
 
 Sent by a Server to accept a Client. The ITMP session is now open.
 
-`[CONNECTED, CONNECT.Connection:id, Session:id, Details:dict]`
+```itmp
+[CONNECTED, CONNECT.Connection:id, Session:id, Options:dict]
+```
 
 Session is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for securing connection
 
@@ -339,13 +350,17 @@ Session is a random number and can be used to distinguish separate connection at
 
 Sent by a Peer to abort the opening of a ITMP session. No response is expected.
 
-`[ABORT, Code:integer, Reason:string, Details:dict]`
+```itmp
+[ABORT, Code:integer, Reason:string, Options:dict]
+```
 
 ##### 6.4.1.4. DISCONNECT
 
 Sent by a Peer to close a previously opened ITMP session. Must be echo'ed by the receiving Peer.
 
-`[DISCONNECT, Code:integer, Reason:string, Details:dict]`
+```itmp
+[DISCONNECT, Code:integer, Reason:string, Options:dict]
+```
 
 #### 6.4.2. Service discovering
 
@@ -353,13 +368,15 @@ Sent by a Peer to close a previously opened ITMP session. Must be echo'ed by the
 
 Sent by peer to other peer to get peer/function/event description
 
-`[DESCRIBE, Request:id, Topic:uri, Options:dict]`
-
-##### 6.4.2.1. DESCRIPTION
+```itmp
+[DESCRIBE, Request:id, Topic:uri, Options:dict]
+```
 
 Sent by peer as answer to DESCRIBE message
 
-`[DESCRIPTION, Request:id, description:list, Options:dict]`
+```itmp
+[RESULT, Request:id, description:list, Options:dict]
+```
 
 #### 6.4.2. Publish & Subscribe
 
@@ -367,7 +384,9 @@ Sent by peer as answer to DESCRIBE message
 
 Sent by a Publisher to a Subscriber/Broker to publish an event without acknowledge.
 
-`[EVENT, Request:id, Topic:uri, Arguments, Options:dict]`
+```itmp
+[EVENT, Request:id, Topic:uri, Arguments, Options:dict]
+```
 
 An event is dispatched to a Subscriber for a given "Subscription:id" only once. On the other hand, a Subscriber that holds subscriptions with different "Subscription:id"s that all match a given event will receive the event on each matching subscription.
 
@@ -375,37 +394,43 @@ An event is dispatched to a Subscriber for a given "Subscription:id" only once. 
 
 Sent by a Publisher to a Subscriber/Broker to publish an event with acknowledge awaiting.
 
-`[PUBLISH, Request:id, Topic:uri, Arguments, Options:dict]`
-
-##### 6.4.2.2. PUBLISHED
+```itmp
+[PUBLISH, Request:id, Topic:uri, Arguments, Options:dict]
+```
 
 Acknowledge sent by a Broker to a Publisher for acknowledged publications.
 
-`[PUBLISHED, Request:id, Options:dict]`
+```itmp
+[RESULT, Request:id, Options:dict]
+```
 
 ##### 6.4.2.3. SUBSCRIBE
 
 Subscribe request sent by a Subscriber to a Broker to subscribe to a topic.
 
-`[SUBSCRIBE, Request:id, Topic:uri, Options:dict]`
-
-##### 6.4.2.3. SUBSCRIBED
+```itmp
+[SUBSCRIBE, Request:id, Topic:uri, Options:dict]
+```
 
 Subscribe request was accepted.
 
-`[SUBSCRIBED, Request:id, Options:dict]`
+```itmp
+[RESULT, Request:id, Options:dict]
+```
 
 ##### 6.4.2.5. UNSUBSCRIBE
 
 Unsubscribe request sent by a Subscriber to a Broker to unsubscribe a subscription.
 
-`[UNSUBSCRIBE, Request:id, Topic:uri, Options:dict]`
-
-##### 6.4.2.4. UNSUBSCRIBED
+```itmp
+[UNSUBSCRIBE, Request:id, Topic:uri, Options:dict]
+```
 
 Acknowledge sent by a Broker to a Subscriber to acknowledge a unsubscription.
 
-`[UNSUBSCRIBED, UNSUBSCRIBE.Request:id, Options:dict]`
+```itmp
+[RESULT, UNSUBSCRIBE.Request:id, Options:dict]
+```
 
 #### 6.4.3. Remote Procedure Calls
 
@@ -413,69 +438,78 @@ Acknowledge sent by a Broker to a Subscriber to acknowledge a unsubscription.
 
 Call as originally issued by the Caller.
 
-`[CALL, Request:id, Procedure:uri, Arguments, Options:dict]`
+```itmp
+[CALL, Request:id, Procedure:uri, Arguments, Options:dict]
+```
 
 ##### 6.4.3.2. ARGUMENTS
 
 Provide additional arguments to the call to Callee during call execution.
 
-`[ARGUMENTS, CALL.Request:id, Arguments, Options:dict]`
+```itmp
+[ARGUMENTS, CALL.Request:id, Arguments, Options:dict]
+```
 
 ##### 6.4.3.2. PROGRESS
 
 Result of a call progress returned to Caller during call execution.
 
-`[PROGRESS, CALL.Request:id, Result, Details:dict]`
+```itmp
+[PROGRESS, CALL.Request:id, Result, Options:dict]
+```
 
 ##### 6.4.3.2. CANCEL
 
 Cancel the previously called function.
 
-`[CANCEL, CALL.Request:id, Details:dict]`
+```itmp
+[CANCEL, CALL.Request:id, Options:dict]
+```
 
 ##### 6.4.3.2. RESULT
 
 Result of a call as returned to Caller.
 
-`[RESULT, CALL.Request:id, Result, Details:dict]`
+```itmp
+[RESULT, CALL.Request:id, Result, Options:dict]
+```
 
 ##### 6.4.3.2. ERROR
 
 Result of a call as returned to Caller if the error occur during call execution.
 
-`[ERROR, CALL.Request:id, error code:integer, TextError:string, Details:dict]`
+```itmp
+[ERROR, CALL.Request:id, error code:integer, TextError:string, Options:dict]`
+```
 
 #### 6.4.4. List of all messages and codes
 
 | code | Format | desc |
 | ---- | ----------- | -------- |
 | | __Connection__
-| 0 | [CONNECT, Connection:id, Realm:uri, Details:dict] | open connection |
-| 2 | [PARAMETERS, CONNECT.Connection:id, Details:dict] | privide additional parameters for proper connection
-| 1 | [CONNECTED, CONNECT.Connection:id, Session:id, Details:dict] | confirm connection
-| 2 | [ABORT, Code:integer, Reason:string, Details:dict] | terminate connection
-| 4 | [DISCONNECT, Code:integer, Reason:string, Details:dict] |  clear finish connection
+| 0 | [CONNECT, Connection:id, Realm:uri, Options:dict] | open connection |
+| 2 | [PARAMETERS, CONNECT.Connection:id, Options:dict] | privide additional parameters for proper connection
+| 1 | [CONNECTED, CONNECT.Connection:id, Session:id, Options:dict] | confirm connection
+| 2 | [ABORT, Code:integer, Reason:string, Options:dict] | terminate connection
+| 4 | [DISCONNECT, Code:integer, Reason:string, Options:dict] |  clear finish connection
 | | __Error__
-| 5 | [ERROR, Request:id, Code:integer, Reason:string, Details:dict] | error notificarion
+| 5 | [ERROR, Request:id, Code:integer, Reason:string, Options:dict] | error notificarion
+| | __Result__
+| 9 | [RESULT, Request:id, Result, Options:dict] | response notificarion
 | | __Description__
 | 6 | [DESCRIBE, Request:id, Topic:uri, Options:dict] | get description
-| 7 | [DESCRIPTION, DESCRIBE.Request:id, description:list, Options:dict] | description response
 | | __RPC__
 | 8 | [CALL, Request:id, Procedure:uri, Arguments, Options:dict] | call
-| 9 | [RESULT, CALL.Request:id, Result, Details:dict] | call response
 |  | __RPC Extended__
 | 10 | [ARGUMENTS, CALL.Request:id, ARGUMENTS.Sequuence:integer, Arguments, Options:dict] | additional arguments for call
-| 11 | [PROGRESS, CALL.Request:id, PROGRESS.Sequuence:integer, Result, Details:dict] | call in progress
-| 12 | [CANCEL, CALL.Request:id, Details:dict] | call cancel
+| 11 | [PROGRESS, CALL.Request:id, PROGRESS.Sequuence:integer, Result, Options:dict] | call in progress
+| 12 | [CANCEL, CALL.Request:id, Options:dict] | call cancel
 | | __publish__
 | 13 | [EVENT, Request:id, Topic:uri, Arguments, Options:dict] | event
 | 14 | [PUBLISH, Request:id, Topic:uri, Arguments, Options:dict] | event with acknowledge awaiting
-| 15 | [PUBLISHED, PUBLISH.Request:id, Publication:id, Options:dict] | event acknowledged
 | | __subscribe__
 | 16 | [SUBSCRIBE, Request:id, Topic:uri, Options:dict] | subscribe
-| 17 | [SUBSCRIBED, SUBSCRIBE.Request:id, Options:dict] | subscription confirmed
 | 18 | [UNSUBSCRIBE, Request:id, Topic:uri, Options:dict]
-| 20 | [UNSUBSCRIBED, UNSUBSCRIBE.Request:id, Options:dict]
 |  | __keep alive__
 | 33 | [KEEP_ALIVE, Request:id, Options:dict] | keep alive request
 | 34 | [KEEP_ALIVE_RESP, KEEP_ALIVE.Request:id, Options:dict] | keep alive responce
@@ -484,16 +518,20 @@ Result of a call as returned to Caller if the error occur during call execution.
 
 ITMP uses type codes from the core range [0, 34]. Implementations MAY define and use implementation specific messages with message type codes from the extension message range [35, 255]. For example, a router MAY implement router-to-router communication by using extension messages.
 
-### 6.7. Empty Options and Details
+### 6.7. Empty Options
 
-Implementations SHOULD avoid sending empty "Details" dicts.
+Implementations SHOULD avoid sending empty "Options" dicts.
 E.g. a "CALL" message
 
-`[CALL, Request:id, Procedure:uri, Arguments, Options:dict]`
+```itmp
+[CALL, Request:id, Procedure:uri, Arguments, Options:dict]
+```
 
 where " Options == {}" SHOULD be avoided, and instead
 
-`[CALL, Request:id, Procedure:uri, Arguments]`
+```itmp
+[CALL, Request:id, Procedure:uri, Arguments]
+```
 
 SHOULD be sent.
 
@@ -502,11 +540,15 @@ SHOULD be sent.
 Implementations SHOULD avoid sending empty "Arguments" lists if Options is empty.
 E.g. a "CALL" message
 
-`[CALL, Request:id, Procedure:uri, Arguments]`
+```itmp
+[CALL, Request:id, Procedure:uri, Arguments]
+```
 
 where "Arguments == []" SHOULD be avoided, and instead
 
-`[CALL, Request:id, Procedure:uri]`
+```itmp
+[CALL, Request:id, Procedure:uri]
+```
 
 SHOULD be sent.
 
@@ -525,13 +567,15 @@ The message flow between Clients and Routers for opening and closing ITMP sessio
 
 After the underlying transport has been established, the opening of a ITMP session is initiated by the Client sending a "CONNECT" message to the Router
 
-`[CONNECT, Realm:uri, Details:dict]`
+```itmp
+[CONNECT, Realm:uri, Options:dict]
+```
 
 where
 
 "Realm" is a string identifying the realm this session should attach to
 
-"Details" is a dictionary that allows to provide additional opening information (see below).
+"Options" is a dictionary that allows to provide additional opening information (see below).
 The "CONNECT" message MUST be the very first message sent by the Client after the transport has been established.
 In the ITMP Basic Profile without session authentication the Router will reply with a "CONNECTED" or "ABORT" message.
 A ITMP session starts its lifetime when the Router has sent a "CONNECTED" message to the Client, and ends when the underlying transport closes or when the session is closed explicitly by either peer sending the "DISCONNECT" message (see below).
@@ -541,7 +585,7 @@ It is a protocol error to receive a second "CONNECT" message during the lifetime
 ##### 7.1.1.1. Client: Role and Feature Announcement
 
 ITMP uses _Role & Feature announcement_ instead of _protocol versioning_ to allow implementations only supporting subsets of functionality future extensibility
-A Client must announce the roles it supports via "Connect.Details.roles:dict", with a key mapping to a "Connect.Details.roles.<role>:dict" where "<role>" can be:
+A Client can announce the roles it supports via "Connect.Options.roles:dict", with a key mapping to a "Connect.Options.roles.\<role\>:dict" where "\<role\>" can be:
 
 * "publisher"
 * "subscriber"
@@ -555,30 +599,27 @@ This MUST be empty for ITMP Basic Profile implementations, and MUST be used by i
 _Example: A Client that implements the Publisher and Subscriber roles of the ITMP Basic Profile._
 
 ```json
-[0, "somerealm", {
-"roles": {
-"publisher": {},
-"subscriber": {}
-}
-}]
+[0, "somerealm", {"roles": {"publisher": {},"subscriber": {}}}]
 ```
 
 #### 7.1.2. CONNECTED
 
 A Router completes the opening of a ITMP session by sending a "CONNECTED" reply message to the Client.
 
-`[CONNECTED, Session:id, Details:dict]`
+```itmp
+[CONNECTED, Session:id, Options:dict]
+```
 
 where
 "Session" MUST be a randomly generated ID specific to the ITMP session. This applies for the lifetime of the session.
-"Details" is a dictionary that allows to provide additional information regarding the open session (see below).
+"Options" is a dictionary that allows to provide additional information regarding the open session (see below).
 In the ITMP Basic Profile without session authentication, a "CONNECTED" message MUST be the first message sent by the Router, directly in response to a "CONNECT" message received from the Client. Extensions in the Advanced Profile MAY include intermediate steps and messages for authentication.
 Note. The behavior if a requested "Realm" does not presently exist is router-specific. A router may e.g. automatically create the realm, or deny the establishment of the session with a "ABORT" reply message.
 
 ##### 7.1.2.1. Router: Role and Feature Announcement
 
 Similar to a Client announcing Roles and Features supported in the "CONNECT" message, a Router announces its supported Roles and Features in the "CONNECTED" message.
-A Router MUST announce the roles it supports via "Connected.Details.roles:dict", with a key mapping to a "Connected.Details.roles.<role>:dict" where "<role>" can be:
+A Router MUST announce the roles it supports via "Connected.Options.roles:dict", with a key mapping to a "Connected.Options.roles.\<role\>:dict" where "\<role\>" can be:
 
 * "broker"
 * "dealer"
@@ -593,54 +634,64 @@ The "\<role\>:dict" is a dictionary describing features supported by the peer fo
 _Example: A Router implementing the Broker role of the ITMP Basic Profile._
 
 ```json
-[2, 9129137332, {
-"roles": {
-"broker": {}
-}
-}]
+[2, 9129137332, {"roles": {"broker": {}}}]
 ```
 
 #### 7.1.3. ABORT
 
 Both the Router and the Client may abort the opening of a ITMP session by sending an "ABORT" message.
 
-`[ABORT, Code:integer, Reason:string, Details:dict]`
+```itmp
+[ABORT, Code:integer, Reason:string, Options:dict]
+```
 
 where
 
 "Code" MUST be an integer code of error.
-"Details" MUST be a dictionary that allows to provide additional, optional closing information (see below).
+"Options" MUST be a dictionary that allows to provide additional, optional closing information (see below).
 No response to an "ABORT" message is expected.
 
-`[3, 407,"The realm does not exist."]`
+```json
+[3, 407,"The realm does not exist."]
+```
 
 ### 7.2. Session Closing
 
 A ITMP session starts its lifetime with the Router sending a "CONNECTED" message to the Client and ends when the underlying transport disappears or when the ITMP session is closed explicitly by a "DISCONNECT" message sent by one Peer and a "DISCONNECT" message sent from the other Peer in response.
 
-`[DISCONNECT, Code:integer, Reason:string, Details:dict]`
+```itmp
+[DISCONNECT, Code:integer, Reason:string, Options:dict]
+```
 
 where
 
 "Code" MUST be an integer code of error.
 
-"Details" MUST be a dictionary that allows to provide additional, optional closing information (see below).
+"Options" MUST be a dictionary that allows to provide additional, optional closing information (see below).
 
 _Example_. One Peer initiates closing
 
-`[6, 503, "The host is shutting down now."]`
+```json
+[6, 503, "The host is shutting down now."]
+```
 
 and the other peer replies
 
-`[6, 200, "connection closed"]`
+```json
+[6, 200, "connection closed"]
+```
 
 _Example_. One Peer initiates closing
 
-`[6, 304, " close realm"]`
+```json
+[6, 304, " close realm"]
+```
 
 and the other peer replies
 
-`[6, 200, "connection closed"]`
+```json
+[6, 200, "connection closed"]
+```
 
 #### 7.2.1. Difference between ABORT and DISCONNECT
 
@@ -656,21 +707,18 @@ Though "ABORT" and "DISCONNECT" are structurally identical, using different mess
 When a software agent operates in a network protocol, it often identifies itself, its application type, operating system, software vendor, or software revision, by submitting a characteristic identification string to its operating peer.
 Similar to what browsers do with the "User-Agent" HTTP header, both the "CONNECT" and the "CONNECTED" message MAY disclose the ITMP implementation in use to its peer:
 
-CONNECT.Details.agent:string
+CONNECT.Options.agent:string
 
 and
 
-CONNECTED.Details.agent:string
+CONNECTED.Options.agent:string
 
 _Example: A Client "CONNECT" message._
 
 ```json
 [1, "somerealm", {
-"agent": "itmpJS-0.1.14",
-"roles": {
-"subscriber": {},
-"publisher": {}
-}
+  "agent": "itmpJS-0.1.14",
+  "roles": {"subscriber": {},"publisher": {}}
 }]
 ```
 
@@ -678,10 +726,8 @@ _Example: A Router "CONNECTED" message._
 
 ```json
 [2, 9129137332, {
-"agent": "itmp.io-0.1.11",
-"roles": {
-"broker": {}
-}
+  "agent": "itmp.io-0.1.11",
+  "roles": {"broker": {}}
 }]
 ```
 
@@ -875,11 +921,9 @@ When naming topics it is important not to use them like a queue, for example usi
 The message flow between Clients implementing the role of Subscriber and Routers implementing the role of Broker for subscribing and unsubscribing involves the following messages:
 
 1. "SUBSCRIBE"
-2. "SUBSCRIBED"
-3. "UNSUBSCRIBE"
-4. "UNSUBSCRIBED"
-5. "POLL"
-6. "ERROR"
+2. "UNSUBSCRIBE"
+3. "RESULT"
+4. "ERROR"
 
 A Subscriber may subscribe to zero, one or more topics, and a Publisher publishes to topics without knowledge of subscribers.
 Upon subscribing to a topic via the "SUBSCRIBE" message, a Subscriber will receive any future events published to the respective topic by Publishers, and will receive those events asynchronously.
@@ -890,27 +934,31 @@ A Subscriber may have more than one event handler attached to the same subscript
 
 A Subscriber communicates its interest in a topic to a Broker by sending a "SUBSCRIBE" message:
 
-`[SUBSCRIBE, Request:id, Topic:uri, Options:dict]`
+```itmp
+[SUBSCRIBE, Request:id, Topic:uri, Options:dict]
+```
 
 where
 
 "Request" MUST be a random, ephemeral ID chosen by the Subscriber and used to correlate the Broker's response with the request.
 
-"Options" MUST be a dictionary that allows to provide additional subscription request details in a extensible way. This is described further below.
+"Options" MUST be a dictionary that allows to provide additional subscription request Options in a extensible way. This is described further below.
 
 "Topic" is the topic the Subscriber wants to subscribe to and MUST be an URI.
 
 _Example_
 
-`[32, 713845233, "com.myapp.mytopic1", {}]`
+```json
+[16, 713845233, "com.myapp.mytopic1", {}]
+```
 
 A Broker, receiving a "SUBSCRIBE" message, can fullfill or reject the subscription, so it answers with "SUBSCRIBED" or "ERROR" messages.
 
-#### 9.3.2. SUBSCRIBED
-
 If the Broker is able to fulfill and allow the subscription, it answers by sending a "SUBSCRIBED" message to the Subscriber
 
-`[SUBSCRIBED, SUBSCRIBE.Request:id]`
+```itmp
+[RESULT, SUBSCRIBE.Request:id, Subscription:id]
+```
 
 where
 
@@ -920,16 +968,18 @@ where
 
 _Example_
 
-`[33, 713845233]`
+```json
+[9, 713845233, 5233]
+```
 
 Note. The "Subscription" ID chosen by the broker need not be unique to the subscription of a single Subscriber, but may be assigned to the "Topic", or the combination of the "Topic" and some or all "Options", such as the topic pattern matching method to be used. Then this ID may be sent to all Subscribers for the "Topic" or "Topic" / "Options" combination. This allows the Broker to serialize an event to be delivered only once for all actual receivers of the event.
 In case of receiving a "SUBSCRIBE" message from the same Subscriber and to already subscribed topic, Broker should answer with "SUBSCRIBED" message, containing the existing "Subscription:id".
 
-#### 9.3.3. Subscribe ERROR
-
 When the request for subscription cannot be fulfilled by the Broker, the Broker sends back an "ERROR" message to the Subscriber
 
-`[ERROR, SUBSCRIBE.Request:id, Code:integer, Description:string, Details:dict]`
+```itmp
+[ERROR, SUBSCRIBE.Request:id, Code:integer, Description:string, Options:dict]
+```
 
 where
 
@@ -941,12 +991,17 @@ where
 
 _Example_
 
-`[8, 713845233, 401, " not authorized"]`
+```json
+[5, 713845233, 401, "not authorized"]
+```
 
 #### 9.3.4. UNSUBSCRIBE
+
 When a Subscriber is no longer interested in receiving events for a subscription it sends an "UNSUBSCRIBE" message
 
-`[UNSUBSCRIBE, Request:id, , Topic:uri, Options:dict]`
+```itmp
+[UNSUBSCRIBE, Request:id, Topic:uri, Options:dict]
+```
 
 where
 
@@ -956,13 +1011,15 @@ where
 
 _Example_
 
-`[34, 85346237, "com.myapp.mytopic1"]`
-
-#### 9.3.5. UNSUBSCRIBED
+```json
+[18, 85346237, "com.myapp.mytopic1"]
+```
 
 Upon successful unsubscription, the Broker sends an "UNSUBSCRIBED" message to the Subscriber
 
-`[UNSUBSCRIBED, UNSUBSCRIBE.Request:id]`
+```itmp
+[RESULT, UNSUBSCRIBE.Request:id]
+```
 
 where
 
@@ -970,13 +1027,15 @@ where
 
 _Example_
 
-`[35, 85346237]`
-
-#### 9.3.6. Unsubscribe ERROR
+```json
+[9, 85346237]
+```
 
 When the request fails, the Broker sends an "ERROR"
 
-`[ERROR, UNSUBSCRIBE.Request:id, Code:integer, Description:string, Details:dict]`
+```itmp
+[ERROR, UNSUBSCRIBE.Request:id, Code:integer, Description:string, Options:dict]
+```
 
 where
 
@@ -988,33 +1047,9 @@ where
 
 _Example_
 
-`[8, 85346237, 404, "No such subscription"]`
-
-#### 9.3.7 POLL
-
-A Subscriber communicates its interest in a topic by sending a "POLL" message:
-
-`[POLL, Request:id, Topic:uri, Options:dict]`
-
-where
-
-"Request" MUST be a random, ephemeral ID chosen by the Subscriber and used to correlate the Broker's response with the request.
-
-"Options" MUST be a dictionary that allows to provide additional subscription request details in a extensible way. This is described further below.
-
-"Topic" is the topic the Subscriber wants to subscribe to and MUST be an URI.
-
-In fact the POLL message it is single-shot Subscription for the topic (or even wildcard)
-
-_Example_
-
-`[21, 713845233, "com.myapp.mytopic1", {}]`
-
-A Broker, receiving a "POLL" message, can send interesting events, so it answers with "EVENT", "PUBLISH" or "ERROR" messages.
-
-ERROR message will be answer for POLL message (and id field will be taken from POLL message)
-
-EVENT and PUBLISH messages will be marked by its own id
+```json
+[5, 85346237, 404, "No such subscription"]
+```
 
 ### 9.4. Publishing and Events
 
@@ -1022,14 +1057,16 @@ The message flow between Publishers, a Broker and Subscribers for publishing to 
 
 1. "EVENT"
 2. "PUBLISH"
-3. "PUBLISHED"
+3. "RESULT"
 4. "ERROR"
 
 #### 9.4.1. EVENT
 
 When a Publisher requests to publish an event to some topic, it sends a "EVENT" message to a Broker:
 
-`[EVENT, Request:id, Topic:uri, Arguments, Options:dict]`
+```itmp
+[EVENT, Request:id, Topic:uri, Arguments, Options:dict]
+```
 
 where
 
@@ -1045,15 +1082,21 @@ That publications are unacknowledged, and the Broker will not respond, whether t
 
 _Example_
 
-`[16, 239714735, "com.myapp.mytopic1"]`
+```json
+[13, 239714735, "com.myapp.mytopic1"]
+```
 
 _Example_
 
-`[16, 239714735, "com.myapp.mytopic1", ["Hello, world!"]]`
+```json
+[13, 239714735, "com.myapp.mytopic1", ["Hello, world!"]]
+```
 
 _Example_
 
-`[16, 239714735, "com.myapp.mytopic1", {"color": "orange", "sizes": [23, 42, 7]}]`
+```json
+[13, 239714735, "com.myapp.mytopic1", {"color": "orange", "sizes": [23, 42, 7]}]
+```
 
 ##### Best Practice
 
@@ -1067,7 +1110,9 @@ Use Event when …
 
 When a Publisher requests to publish an event to some topic, it sends a "PUBLISH" message to a Broker:
 
-`[PUBLISH, Request:id, Topic:uri, Arguments, Options:dict]`
+```itmp
+[PUBLISH, Request:id, Topic:uri, Arguments, Options:dict]
+```
 
 where
 
@@ -1084,15 +1129,21 @@ Publications are acknowledged, and the Broker will respond, depends the publicat
 
 _Example_
 
-`[16, 239714735, "com.myapp.mytopic1"]`
+```json
+[14, 239714735, "com.myapp.mytopic1"]
+```
 
 _Example_
 
-`[16, 239714735, "com.myapp.mytopic1", ["Hello, world!"]]`
+```json
+[14, 239714735, "com.myapp.mytopic1", ["Hello, world!"]]
+```
 
 _Example_
 
-`[16, 239714735, "com.myapp.mytopic1", {"color": "orange", "sizes": [23, 42, 7]}]`
+```json
+[14, 239714735, "com.myapp.mytopic1", {"color": "orange", "sizes": [23, 42, 7]}]
+```
 
 ##### Best Practice
 
@@ -1100,11 +1151,11 @@ Use Publish when …
 
 * It is critical to your application to receive all messages exactly once. This is often the case if a duplicate delivery would do harm to application users or subscribing clients. You should be aware of the overhead and that it takes a bit longer to complete the publish flow.
 
-#### 9.4.2. PUBLISHED
-
 If the Broker is able to fulfill and allowing the publication of PUBLISH message, the Broker replies by sending a "PUBLISHED" message to the Publisher:
 
-`[PUBLISHED, PUBLISH.Request:id, Publication:id]`
+```itmp
+[RESULT, PUBLISH.Request:id, Publication:id]
+```
 
 where
 
@@ -1114,13 +1165,17 @@ where
 
 _Example_
 
-`[17, 239714735, 4429313566]`
+```json
+[9, 239714735, 4429313566]
+```
 
 #### 9.4.3. Publish ERROR
 
 When the PUBLISH request for publication cannot be fulfilled by the Broker, the Broker sends back an "ERROR" message to the Publisher
 
-`[ERROR, PUBLISH.Request:id, Code:integer, Description:string, Details:dict]`
+```itmp
+[ERROR, PUBLISH.Request:id, Code:integer, Description:string, Options:dict]
+```
 
 where
 
@@ -1130,19 +1185,24 @@ where
 
 _Example_
 
-`[8, 239714735, 401, " not authorized"]`
+```json
+[5, 239714735, 401, " not authorized"]
+```
 
 ## 10. Remote Procedure Calls
 
 All of the following features for Remote Procedure Calls are mandatory for ITMP Basic Profile implementations supporting the respective roles.
 
 ### 10.2. Calling
+
 The message flow between Callers, a Dealer and Callees for calling procedures and invoking endpoints involves the following messages:
 
 1. "CALL"
 2. "ARGUMENTS"
-3. "RESULT"
-4. "ERROR"
+3. "PROGRESS"
+4. "CANCEL"
+5. "RESULT"
+6. "ERROR"
 
 The execution of remote procedure calls is asynchronous, and there may be more than one call outstanding. A call is called outstanding (from the point of view of the Caller), when a (final) result or error has not yet been received by the Caller.
 
@@ -1150,7 +1210,9 @@ The execution of remote procedure calls is asynchronous, and there may be more t
 
 When a Caller wishes to call a remote procedure, it sends a "CALL" message to a Dealer:
 
-`[CALL, Request:id, Procedure:uri, Arguments, Options:dict]`
+```itmp
+[CALL, Request:id, Procedure:uri, Arguments, Options:dict]
+```
 
 where
 
@@ -1159,29 +1221,180 @@ where
 "Options" is a dictionary that allows to provide additional call request details in an extensible way. This is described further below.
 
 "Procedure" is the URI of the procedure to be called.
-if uri denote event topic, CALL make polling for event and can be used for get an event without subscribing,in such a way RESULT bring Event if so and ERROR will return if no message. 
+if uri denote event topic, CALL make polling for event and can be used for get an event without subscribing,in such a way RESULT bring Event if so and ERROR will return if no message.
 
-"Arguments" is a list of positional call arguments (each of arbitrary type) or dictionary of keyword call arguments. The Arguments may be empty or omitted.
-
-_Example_
-
-`[48, 7814135, "com.myapp.ping"]`
+"Arguments" is a list of positional call arguments (each of arbitrary type) or dictionary of keyword call arguments. The Arguments may be empty or omitted.The Arguments can npt be null because it mark following arguments message present.
 
 _Example_
 
-`[48, 7814135, "com.myapp.echo", ["Hello, world!"]]`
+```json
+[8, 7814135, "com.myapp.ping"]
+```
 
 _Example_
 
-`[48, 7814135, "com.myapp.add2", [23, 7]]`
+```json
+[8, 7814135, "com.myapp.echo", ["Hello, world!"]]
+```
 
 _Example_
 
-`[48, 7814135, "com.myapp.user.new", {"firstname": "John", "surname": "Doe"}]`
+```json
+[8, 7814135, "com.myapp.add2", [23, 7]]
+```
+
+_Example_
+
+```json
+[8, 7814135, "com.myapp.user.new", {"firstname": "John", "surname": "Doe"}]
+```
 
 #### 10.2.3. RESULT
 
 If the Callee is able to successfully process and finish the execution of the call, it answers by sending a "RESULT" message to the Dealer:
+
+```itmp
+[RESULT, CALL.Request:id, Arguments, Options:dict]
+```
+
+where
+
+"CALL.Request" is the ID from the original invocation request.
+
+"Arguments" is a list of positional result elements (each of arbitrary type) or dictionary of keyword result elements (each of arbitrary type). The Arguments may be empty or even omitted.
+
+"Options"is a dictionary that allows to provide additional options.
+
+_Example_
+
+```json
+[9, 6131533]
+```
+
+_Example_
+
+```json
+[9, 6131533, ["Hello, world!"]]
+```
+
+_Example_
+
+```json
+[9, 6131533, [30]]
+```
+
+_Example_
+
+```json
+[9, 6131533, {"userid": 123, "karma": 10}]
+```
+
+#### 10.2.3. ARGUMENTS
+
+If the Caller shold send a lot of arguments or produse the arguments for long time or the arguments is too big to send it as single message, it send several "ARGUMENTS" message to the Dealer after the CALL message:
+
+```itmp
+[CALL, Request:id, Procedure:uri, null, Options:dict]
+[ARGUMENTS, CALL.Request:id, 0, Arguments, Options:dict]
+[ARGUMENTS, CALL.Request:id, 1, Arguments, Options:dict]
+[ARGUMENTS, CALL.Request:id, 2]
+[RESULT, CALL.Request:id, Arguments, Options:dict]
+```
+
+where
+
+"CALL.Request" is the ID from the original invocation request.
+
+"Arguments" is a list of positional result elements (each of arbitrary type) or dictionary of keyword result elements (each of arbitrary type). The Arguments may be empty or even omitted.
+
+"Options"is a dictionary that allows to provide additional options.
+
+_Example_
+
+```json
+->[8, 6131533,"fill",null]
+->[10, 6131533,0,[5]]
+->[10, 6131533,1,[25]]
+->[10, 6131533,2,[65]]
+->[10, 6131533,3]
+<-[9, 6131533]
+```
+
+_Example_
+
+```json
+->[8, 6131533, "add user", null]
+->[10, 6131533, 0, {"userid": 123}]
+->[10, 6131533, 1, {"karma": 10}]
+->[10, 6131533, 2, {"level": 3}]
+->[10, 6131533, 3]
+<-[9, 6131533]
+```
+
+#### 10.2.3. PROGRESS
+
+If the Callee produse the result for long time or part by part or the result is too big to send it as single message, it answers by sending several "PROGRESS" message to the Dealer before the RESULT message sent:
+
+```itmp
+[PROGRESS, CALL.Request:id, 0, Arguments, Options:dict]
+[PROGRESS, CALL.Request:id, 1, Arguments, Options:dict]
+[PROGRESS, CALL.Request:id, 2, Arguments, Options:dict]
+[PROGRESS, CALL.Request:id, 3, Arguments, Options:dict]
+[RESULT, CALL.Request:id, Arguments, Options:dict]
+```
+
+where
+
+"CALL.Request" is the ID from the original invocation request.
+
+"Arguments" is a list of positional result elements (each of arbitrary type) or dictionary of keyword result elements (each of arbitrary type). The Arguments may be empty or even omitted.
+
+"Options"is a dictionary that allows to provide additional options.
+
+_Example_
+
+```json
+<-[11, 6131533,0,["5%"]]
+<-[11, 6131533,1,["25%"]]
+<-[11, 6131533,2,["65%"]]
+<-[11, 6131533,3,["95%"]]
+<-[9, 6131533]
+```
+
+_Example_
+
+```json
+<-[11, 6131533, 0, ["preparing for Hello, world!"]]
+<-[9, 6131533, ["Hello, world!"]]
+```
+
+_Example_
+
+```json
+<-[11, 6131533, 0, [330]]
+<-[11, 6131533, 1, [530]]
+<-[11, 6131533, 2, [360]]
+<-[9, 6131533, [30]]
+```
+
+_Example_
+
+```json
+<-[11, 6131533, 0, {"userid": 123}]
+<-[11, 6131533, 1, {"karma": 10}]
+<-[11, 6131533, 2, {"level": 3}]
+<-[9, 6131533, {}]
+```
+
+#### 10.2.3. CANCEL
+
+If the Callee produse the result using PROGRESS messages Caller can stop the call by sending "CANCEL" message to the Dealer:
+
+`[PROGRESS, CALL.Request:id, 0, Arguments, Options:dict]`
+
+`[PROGRESS, CALL.Request:id, 1, Arguments, Options:dict]`
+
+`[CANCEL, CALL.Request:id, Options:dict]`
 
 `[RESULT, CALL.Request:id, Arguments, Options:dict]`
 
@@ -1195,37 +1408,39 @@ where
 
 _Example_
 
-`[70, 6131533]`
+`[11, 6131533,0,["5%"]]`
+
+`[11, 6131533,1,["25%"]]`
+
+`[12, 6131533]`
+
+`[9, 6131533]`
 
 _Example_
 
-`[70, 6131533, ["Hello, world!"]]`
+`[11, 6131533, 0, [330]]`
 
-_Example_
+`[12, 6131533, 1, [530]]`
 
-`[70, 6131533, [30]]`
-
-_Example_
-
-`[70, 6131533, {"userid": 123, "karma": 10}]`
+`[5, 6131533, 409, "Process aborted"]`
 
 #### 10.2.5. ERROR
 
 If the Callee is unable to process or finish the execution of the call, or the application code implementing the procedure raises an exception or otherwise runs into an error, the Callee sends an "ERROR" message to the Dealer:
 
-`[ERROR, CALL.Request:id, Code:integer, Description:string, Details:dict]`
+`[ERROR, CALL.Request:id, Code:integer, Description:string, Options:dict]`
 
 where
 
 "CALL.Request" is the ID from the original "CALL" request previously sent by the Dealer to the Callee.
 
-"Details" is a dictionary with additional error details.
+"Options" is a dictionary with additional error Options.
 
 "Code" is an integer that identifies the error of why the request could not be fulfilled.
 
 _Example_
 
-`[8, 6131533, 504, "time out", {"severity": 3}]`
+`[5, 6131533, 504, "time out", {"severity": 3}]`
 
 ## 11. Error codes
 
@@ -1253,91 +1468,90 @@ ITMP pre-defines the following error codes. ITMP peers MUST use only the defined
 * 501 Not Implemented
 * 507 Insufficient Storage
 
-
-#### 11.1.1. 400 Bad request
+### 11.1. 400 Bad request
 
 When a Peer provides an incorrect URI for any URI-based attribute of a ITMP message (e.g. realm, topic), then the other Peer MUST respond with an "ERROR" message and give the code 400 for such requests
 
-#### 11.1.2. 401 Unauthorized
+### 11.2. 401 Unauthorized
 
 When a Peer needs authorization they MUST respond with an "ERROR" message and give the code 401 for any requests except CONNECT
 A join, call, register, publish or subscribe failed, since the Peer is not authorized to perform the operation.
 
 A Dealer or Broker could not determine if the Peer is authorized to perform a join, call, register, publish or subscribe, since the authorization operation _itself_ failed. E.g. a custom authorizer did run into an error.
 
-#### 11.1.3. 403 Forbidden
+### 11.3. 403 Forbidden
 
 When a Peer restrict using some methodta or arguments they MUST respond with an "ERROR" message and give the code 403 for any requests that violate restrictions
 
-#### 11.1.4. 404 Not Found
+### 11.4. 404 Not Found
 
 A Node could not perform a call or other action, since no procedure is currently registered under the given URI.
 
-#### 11.1.5. 405 Method Not Allowed
+### 11.5. 405 Method Not Allowed
 
 A Node could not perform a call or other action, since type of uri is not intended to called function (for example CALL for event uri).
 
-#### 11.1.6. 406 Not Acceptable
+### 11.6. 406 Not Acceptable
 
 A Node could not perform a call or other action, since type of uri is not intended to called function (for example CALL for event uri).
 
-#### 11.1.7. 413 Request Entity Too Large
+### 11.7. 413 Request Entity Too Large
 
 A Node could not perform a call or other action, since message is too large.
 
-#### 11.1.8. 414 Request-URI Too Large
+### 11.8. 414 Request-URI Too Large
 
 A Node could not perform a call or other action, since message is too large.
 
-#### 11.1.9. 418 I'm a teapot
+### 11.9. 418 I'm a teapot
 
 A Node is teapot.
 
-#### 11.1.10. 429 Too Many Requests
+### 11.10. 429 Too Many Requests
 
 A Node could not perform a call or other action, since message is coming to fast.
 
-#### 11.1.11. 419 Format error
+### 11.11. 419 Format error
 
 A Node could not perform a call or other action, since message has bad format.
 
-#### 11.1.12. 420 Type error
+### 11.12. 420 Type error
 
 A Node could not perform a call or other action, since message components has bad type.
 
-#### 11.1.13. 421 Reserved...
+### 11.13. 421 Reserved...
 
 reserved code
 
-#### 11.1.14. 500 Internal Server Error
+### 11.14. 500 Internal Server Error
 
 A Node could not perform a call or other action, since internel error.
 
-#### 11.1.15. 501 Not Implemented
+### 11.15. 501 Not Implemented
 
 A Node could not perform a call or other action, since call is not implemented.
 
-#### 11.1.16. 507 Insufficient Storage
+### 11.16. 507 Insufficient Storage
 
 A Node could not perform a call or other action, since no storage space.
 
-#### 11.1.17. 512 Bag argument
+### 11.17. 512 Bag argument
 
 A call failed since the given argument types or values are not acceptable to the called procedure. In this case the Callee may throw this error. Alternatively a Router may throw this error if it performed _payload validation_ of a call, call result or publish, and the payload did not conform to the requirements.
 
-#### 11.1.18. 513 Session Close
+### 11.18. 513 Session Close
 
 The Peer is shutting down completely - used as a "DISCONNECT" (or "ABORT") reason.
 
-#### 11.1.19. 513 system shutdown
+### 11.19. 513 system shutdown
 
 The Peer is shutting down completely - used as a "DISCONNECT" (or "ABORT") reason.
 
-#### 11.1.21. 514 close realm
+### 11.21. 514 close realm
 
 A Peer acknowledges ending of a session - used as a "DISCONNECT" reply reason.
 
-#### 11.1.22. 202 goodbye and out
+### 11.22. 202 goodbye and out
 
 ## 12. Examples
 
@@ -1345,23 +1559,23 @@ A Peer acknowledges ending of a session - used as a "DISCONNECT" reply reason.
 
 | Client Send | Server send |
 | --- | --- |
-| `[DESCRIBE, 0, ""]` | ```[DESCRIPTION, 0, ["FireGuard`Fire Alarm and automatic Destiguishing board%1.0.10.435#231268834874553@NSC Communication Siberia`:Node,Fireguard","getState&s(s)","StateChanged!ss"] ]``` |
-| `[DESCRIBE, 1, "getState"]` | ```[DESCRIPTION, 1, ["getState`Get Area State`&s`Area state`(s`Area name`)"] ]``` |
-| `[DESCRIBE, 2, "getState"]` | ```[DESCRIPTION, 2, ["StateChanged`Inform about new state of area`!s`Area name`s`Area state`"] ]``` |
+| `[DESCRIBE, 0, ""]` | ```[RESULT, 0, ["FireGuard`Fire Alarm and automatic Destiguishing board%1.0.10.435#231268834874553@NSC Communication Siberia`:Node,Fireguard","getState&","StateChanged!"] ]``` |
+| `[DESCRIBE, 1, "getState"]` | ```[RESULT, 1, ["getState`Get Area State`&s`Area state`(s`Area name`)"] ]``` |
+| `[DESCRIBE, 2, "getState"]` | ```[RESULT, 2, ["StateChanged`Inform about new state of area`!s`Area name`s`Area state`"] ]``` |
 | `[CALL, 3, "getState", ["Area1"] ]` | ```[RESULT, 3, ["Norm"]]``` |
 | `-` | ```[EVENT, 0, "StateChanged" ["Area1","Alarm"]]``` |
 | `-` | ```[PUBLISH, 1, "StateChanged" ["Area1","Norm"]]``` |
-| `[PUBLISHED,1]` | `-` |
+| `[RESULT,1]` | `-` |
 
 ### 12.2  Temperature sensor example
 
 | Sensor Send | Server send |
 | --- | --- |
-| ```[ANNOUNCE, 0, "",["TemperatureSensor`Smart Termometer%1.0#A2DF31CD@NSC Communication Siberia`:Sensor","getTemp&i`Temperature$degrees`()","Temp!s`My ID`i`Temperature$degrees`"] ]"]``` | ```[ACCEPTED, 0]``` |
+| ```[CONNECT, 0, "TemperatureSensor`Smart Termometer%1.0#A2DF31CD@NSC Communication Siberia`:Sensor"]``` | ```[CONNECT, 0]``` |
 | `-` | ```[SUBSCRIBE, 0, ["Temp"] ]``` |
-| `[SUBSCRIBED, 0, 0]` | `-` |
+| `[RESULT, 0, 0]` | `-` |
 | ```[EVENT, 0, "Temp" ["A2DF31CD",24]``` | `-`
-| ```[PUBLISH, 1, "Temp" ["A2DF31CD",23]``` | `[PUBLISHED,1]` |
+| ```[PUBLISH, 1, "Temp" ["A2DF31CD",23]``` | `[RESULT,1]` |
 
 ## 13. Ordering Guarantees
 
