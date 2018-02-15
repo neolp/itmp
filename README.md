@@ -326,13 +326,13 @@ ITMP not always uses sessions and in some implementation based on datagram trans
 
 ##### 6.4.1.1. CONNECT
 
-Sent by a Client to initiate opening of a ITMP session to a Server attaching to a Realm.
+Sent by a Client to initiate opening of a ITMP session to a Server.
 
 ```itmp
-[CONNECT, Connection:id, Realm:uri, Options:dict]
+[CONNECT, Request:id, peer_identifier:string, Options:dict]
 ```
 
-in trusted environment CONNECT can be omitted, then client by default connected to empty ralm without extended features, mostly it is important to small mobile nodes without persistent connection
+in trusted environment CONNECT can be omitted, then client by default connected without extended features, mostly it is important to small mobile nodes without persistent connection
 
 `Connection` is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for securing connection
 
@@ -341,18 +341,10 @@ in trusted environment CONNECT can be omitted, then client by default connected 
 Sent by a Server to accept a Client. The ITMP session is now open.
 
 ```itmp
-[CONNECTED, CONNECT.Connection:id, Session:id, Options:dict]
+[CONNECTED, CONNECT.Request:id, peer_identifier:string, Options:dict]
 ```
 
 Session is a random number and can be used to distinguish separate connection attempts and to transmit initial seed to generate session key for securing connection
-
-##### 6.4.1.3. ABORT
-
-Sent by a Peer to abort the opening of a ITMP session. No response is expected.
-
-```itmp
-[ABORT, Code:integer, Reason:string, Options:dict]
-```
 
 ##### 6.4.1.4. DISCONNECT
 
@@ -487,10 +479,8 @@ Result of a call as returned to Caller if the error occur during call execution.
 | code | Format | desc |
 | ---- | ----------- | -------- |
 | | __Connection__
-| 0 | [CONNECT, Connection:id, Realm:uri, Options:dict] | open connection |
-| 2 | [PARAMETERS, CONNECT.Connection:id, Options:dict] | privide additional parameters for proper connection
-| 1 | [CONNECTED, CONNECT.Connection:id, Session:id, Options:dict] | confirm connection
-| 2 | [ABORT, Code:integer, Reason:string, Options:dict] | terminate connection
+| 0 | [CONNECT, Request:id, peer_identifier:string, Options:dict] | open connection |
+| 1 | [CONNECTED, CONNECT.Request:id, peer_identifier:string, Options:dict] | confirm connection
 | 4 | [DISCONNECT, Code:integer, Reason:string, Options:dict] |  clear finish connection
 | | __Error__
 | 5 | [ERROR, Request:id, Code:integer, Reason:string, Options:dict] | error notificarion
@@ -555,8 +545,7 @@ The message flow between Clients and Routers for opening and closing ITMP sessio
 
 1. "CONNECT"
 2. "CONNECTED"
-3. "ABORT"
-4. "DISCONNECT"
+3. "DISCONNECT"
 
 ### 7.1. Session Establishment
 
@@ -565,16 +554,14 @@ The message flow between Clients and Routers for opening and closing ITMP sessio
 After the underlying transport has been established, the opening of a ITMP session is initiated by the Client sending a "CONNECT" message to the Router
 
 ```itmp
-[CONNECT, Realm:uri, Options:dict]
+[CONNECT, Request:id, peer_identifier:string, Options:dict]
 ```
 
 where
 
-"Realm" is a string identifying the realm this session should attach to
-
 "Options" is a dictionary that allows to provide additional opening information (see below).
 The "CONNECT" message MUST be the very first message sent by the Client after the transport has been established.
-In the ITMP Basic Profile without session authentication the Router will reply with a "CONNECTED" or "ABORT" message.
+In the ITMP Basic Profile without session authentication the Router will reply with a "CONNECTED" or "ERROR" message.
 A ITMP session starts its lifetime when the Router has sent a "CONNECTED" message to the Client, and ends when the underlying transport closes or when the session is closed explicitly by either peer sending the "DISCONNECT" message (see below).
 
 It is a protocol error to receive a second "CONNECT" message during the lifetime of the session and the Peer must fail the session if that happens.
@@ -596,7 +583,7 @@ This MUST be empty for ITMP Basic Profile implementations, and MUST be used by i
 _Example: A Client that implements the Publisher and Subscriber roles of the ITMP Basic Profile._
 
 ```json
-[0, "somerealm", {"roles": {"publisher": {},"subscriber": {}}}]
+[0, "some", {"roles": {"publisher": {},"subscriber": {}}}]
 ```
 
 #### 7.1.2. CONNECTED
@@ -604,11 +591,11 @@ _Example: A Client that implements the Publisher and Subscriber roles of the ITM
 A Router completes the opening of a ITMP session by sending a "CONNECTED" reply message to the Client.
 
 ```itmp
-[CONNECTED, Session:id, Options:dict]
+[CONNECTED, CONNECT.Request:id, peer_identifier:string, Options:dict]
+
 ```
 
 where
-"Session" MUST be a randomly generated ID specific to the ITMP session. This applies for the lifetime of the session.
 "Options" is a dictionary that allows to provide additional information regarding the open session (see below).
 In the ITMP Basic Profile without session authentication, a "CONNECTED" message MUST be the first message sent by the Router, directly in response to a "CONNECT" message received from the Client. Extensions in the Advanced Profile MAY include intermediate steps and messages for authentication.
 Note. The behavior if a requested "Realm" does not presently exist is router-specific. A router may e.g. automatically create the realm, or deny the establishment of the session with a "ABORT" reply message.
@@ -631,25 +618,7 @@ The "\<role\>:dict" is a dictionary describing features supported by the peer fo
 _Example: A Router implementing the Broker role of the ITMP Basic Profile._
 
 ```json
-[2, 9129137332, {"roles": {"broker": {}}}]
-```
-
-#### 7.1.3. ABORT
-
-Both the Router and the Client may abort the opening of a ITMP session by sending an "ABORT" message.
-
-```itmp
-[ABORT, Code:integer, Reason:string, Options:dict]
-```
-
-where
-
-"Code" MUST be an integer code of error.
-"Options" MUST be a dictionary that allows to provide additional, optional closing information (see below).
-No response to an "ABORT" message is expected.
-
-```json
-[3, 407,"The realm does not exist."]
+[2, 9129137332, "server", {"roles": {"broker": {}}}]
 ```
 
 ### 7.2. Session Closing
@@ -690,15 +659,6 @@ and the other peer replies
 [6, 200, "connection closed"]
 ```
 
-#### 7.2.1. Difference between ABORT and DISCONNECT
-
-The differences between "ABORT" and "DISCONNECT" messages are:
-
-1. "ABORT" gets sent only _before_ a Session is established, while "DISCONNECT" is sent only _after_ a Session is already established.
-2. "ABORT" is never replied to by a Peer, whereas "DISCONNECT" must be replied to by the receiving Peer
-
-Though "ABORT" and "DISCONNECT" are structurally identical, using different message types serves to reduce overloaded meaning of messages and simplify message handling code.
-
 ## 8. Agent Identification
 
 When a software agent operates in a network protocol, it often identifies itself, its application type, operating system, software vendor, or software revision, by submitting a characteristic identification string to its operating peer.
@@ -713,7 +673,7 @@ CONNECTED.Options.agent:string
 _Example: A Client "CONNECT" message._
 
 ```json
-[1, "somerealm", {
+[1, "some", {
   "agent": "itmpJS-0.1.14",
   "roles": {"subscriber": {},"publisher": {}}
 }]
@@ -722,7 +682,7 @@ _Example: A Client "CONNECT" message._
 _Example: A Router "CONNECTED" message._
 
 ```json
-[2, 9129137332, {
+[2, 9129137332, "server", {
   "agent": "itmp.io-0.1.11",
   "roles": {"broker": {}}
 }]
@@ -762,15 +722,16 @@ simple type JSON and CBOR encoded inside array and map denoted by '[]' and '{}'
 
 fixed types JSON BASE64 string or CBOR byte array encoded as sequence (for small controllers without complex encoders) denoted by '<>'
 
-* u8  8-bit unsigned integer (byte)
-* i16  16-bit signed integer
-* u16  16-bit unsigned integer
-* i32  32-bit signed integer
-* u32  32-bit unsigned integer
-* i64  64-bit signed integer
-* u64  64-bit unsigned integer
-* f32  single-precision floating point (IEEE 754)
-* d64  double-precision floating point (IEEE 754)
+* u8 - 8-bit unsigned integer (byte)
+* i8 - 8-bit signed integer
+* i16 - 16-bit signed integer
+* u16 - 16-bit unsigned integer
+* i32 - 32-bit signed integer
+* u32 - 32-bit unsigned integer
+* i64 - 64-bit signed integer
+* u64 - 64-bit unsigned integer
+* f32 - single-precision floating point (IEEE 754)
+* d64 - double-precision floating point (IEEE 754)
 
 any sequence of primitive typed values encoded as byte array or base64 encoded string for json
 
