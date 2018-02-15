@@ -510,13 +510,10 @@ Result of a call as returned to Caller if the error occur during call execution.
 | | __subscribe__
 | 16 | [SUBSCRIBE, Request:id, Topic:uri, Options:dict] | subscribe
 | 18 | [UNSUBSCRIBE, Request:id, Topic:uri, Options:dict]
-|  | __keep alive__
-| 33 | [KEEP_ALIVE, Request:id, Options:dict] | keep alive request
-| 34 | [KEEP_ALIVE_RESP, KEEP_ALIVE.Request:id, Options:dict] | keep alive responce
 
 ### 6.6. Extension Messages
 
-ITMP uses type codes from the core range [0, 34]. Implementations MAY define and use implementation specific messages with message type codes from the extension message range [35, 255]. For example, a router MAY implement router-to-router communication by using extension messages.
+ITMP uses type codes from the core range [0, 18]. Implementations MAY define and use implementation specific messages with message type codes from the extension message range [35, 255]. For example, a router MAY implement router-to-router communication by using extension messages.
 
 ### 6.7. Empty Options
 
