@@ -733,51 +733,60 @@ _Example: A Router "CONNECTED" message._
 ```itmp
 <field description> ::= <name><description><signature>
 <name> ::= string
-<signature> ::= <interface> | <func> | <event> | <container>
-<interface> ::= ':' [ <interface name> [ , <interface name> ] ]
-<interface name> ::= string
-<container> ::= '*' [ <interface name> [ , <interface name> ] ]
-<func> ::= '&' <return type list> [ ‘(‘ <argument type list> ’)’ ]
-<event> ::= '!' [<description>]<type list>
-<listener> ::= '~' [<description>]<type list>
-<return type list> ::= <type list>
-<argument type list> ::= <type list>
-<type list> ::= [ <type> [ , <type> ] ]
-<type> ::= <simple type> | '['<type list>']' | '{' <prop name> [ '?' ] : <type> [ , <prop name> : <type> ] '}'
-<simple type> ::= <type char> [<description>]
+<signature> ::= <interface> | <func> | <event>
+<interface> ::= ':' [ <name> [ , <name> ] ]
+<func> ::= '&' [<description>] ‘(‘ <argument type> ’)’ <return type>
+<event> ::= '!' [<description>]<type>
+<return type> ::= <type>
+<argument type> ::= <type>
+<type> ::= <simple type> | '['<type list>']'  | '<'<type list>'>' | '{' <name> [ '?' ] : <type> [ , <prop name> : <type> ] '}'
+<type list> ::= <simple type> [, <simple type>]
+<simple type> ::= <type name> [<description>]
 <description>::='`'[<name>] [<version>] [<UniqueId>] [<units>] [<variants>] [<manufacturer>] [<comments>]'`'
 <version>::=’%’ string
 <UniqueId>::=’#’ string
 <units> ::= '$' string
-<variants> ::= '<' <value> [ , <value> ] '>'
+<variants> ::= '<' <value> [ , <value> ] '>' | '[' <minimum> '..' <maximum> ']'
 <manufacturer> ::= '@' string
 <comments> ::= '/' string
-<type char> ::= i | s | o | e | b | f | B | N | Q | I | U | X | T | F | D | S
+<type char> ::= n | num | number | i | int | s | str | string | b | bool | f | float | i8 | i16 | i32 | i64 | u8 | u16 | u32 | u64 | f32 | d64
 ```
 
-simple type JSON and CBOR encoded
+simple type JSON and CBOR encoded inside array and map denoted by '[]' and '{}'
 
-* i integer
-* s  UTF-8 string
-* o  UTF-8 string as uri of reference object
-* o  UTF-8 string as uri of reference event
-* b boolean
-* f  floating point number
+* n,num,number - float or integer number
+* i,int,integer - integer number
+* f,float - floating point number
+* s,str,string - UTF-8 string
+* b, bool - boolean value
 
-fixed types JSON BASE64 string or CBOR byte array encoded as sequence (for small controllers without complex encoders)
+fixed types JSON BASE64 string or CBOR byte array encoded as sequence (for small controllers without complex encoders) denoted by '<>'
 
-* B  8-bit unsigned integer (byte)
-* N  16-bit signed integer
-* Q  16-bit unsigned integer
-* I  32-bit signed integer
-* U  32-bit unsigned integer
-* X  64-bit signed integer
-* T  64-bit unsigned integer
-* F  single-precision floating point (IEEE 754)
-* D  double-precision floating point (IEEE 754)
-* S  UTF-8 string with length prefix
+* u8  8-bit unsigned integer (byte)
+* i16  16-bit signed integer
+* u16  16-bit unsigned integer
+* i32  32-bit signed integer
+* u32  32-bit unsigned integer
+* i64  64-bit signed integer
+* u64  64-bit unsigned integer
+* f32  single-precision floating point (IEEE 754)
+* d64  double-precision floating point (IEEE 754)
 
 any sequence of primitive typed values encoded as byte array or base64 encoded string for json
+
+_Example_
+
+```itmp
+go & `set pwm fow wheels drivers`( <i16`left pwm[-1280..1280]`,i16`right pwm[-1280..1280]`>) : <i32`left position`, i32`right position`, i32`time stamp$us`, i16`echolocator distance$mm`>
+
+to & `set taget position` (<i32`left target pos$ticks`, i32`right target pos$ticks`, i32`max speed$ticks per sec`,i32`acceleration$ticks per sec per sec`>) <i32`left position`,i32`right position`,i32`time stamp$us`,i32`echolocator distance$mm`>
+
+sp &`set movig speed` (<i32`left speed$ticks per sec`,i32`right speed$ticks per sec`, i32`acceleration$ticks per sec per sec`>) : <i32`left position`,i32`right position,i32`time stamp$us`, i32`echolocator distance$mm`>
+
+set &`set servos position` (<u16`srvo1$us[1000..2000]`,u16`servo2$us[1000..2000]`>)
+
+stat & () <u16`supplyvoltage`,u8`global status`>
+```
 
 ## 9. Publish and Subscribe
 
