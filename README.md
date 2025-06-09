@@ -8,15 +8,15 @@ ITMP is a routable protocol that provides two messaging patterns: Publish & Subs
 
 ### 1.1. Background
 
-The Internet of Thinks Messaging Protocol (ITMP) is intended to provide application developers with the semantics they need to handle messaging between components in distributed applications.
+The Internet of Things Messaging Protocol (ITMP) is intended to provide application developers with the semantics they need to handle messaging between components in distributed applications.
 ITMP is a route-able protocol, with all components can connect to a ITMP Router, where the ITMP Router performs message routing between the components.
 ITMP provides two messaging patterns: Publish & Subscribe and Remote Procedure Calls.
 Publish & Subscribe (PubSub) is an established messaging pattern where a component, the _Subscriber_, informs the router that it wants to receive information on a topic (i.e., it subscribes to a topic).
-Another component, a _Publisher_, can then publish messages or events to this topic, and the router distributes that events to all Subscribers.
+Another component, a _Publisher_, can then publish messages or events to this topic, and the router distributes those events to all Subscribers.
 Remote Procedure Calls (RPCs) rely on the same sort of decoupling that is used by the Publish & Subscribe pattern. A component, the _Callee_, announces to the router that it provides a certain procedure, identified by a procedure name. Other components, _Callers_, can then call the procedure, with the router invoking the procedure on the Callee, receiving the procedure's result, and then forwarding this result back to the Caller. Routed RPCs differ from traditional client-server RPCs in that the router serves as an intermediary between the Caller and the Callee.
 The decoupling in routed RPCs arises from the fact that the Caller is no longer required to have knowledge of the Callee; it merely needs to know the identifier of the procedure it wants to call. There is
 also no longer a need for a direct connection between the caller and the callee, since all traffic is routed. This enables the calling of procedures in components which are not reachable externally (e.g. on a NATted connection) but which can establish an outgoing connection to the ITMP router.
-Combining these two patterns into a single protocol allows it to be used for the entire messaging requirements of an application, thus reducing technology stack complexity, as well as networking overheads. Adding _discovery_ pattern allows both componments know facilities each other.
+Combining these two patterns into a single protocol allows it to be used for the entire messaging requirements of an application, thus reducing technology stack complexity, as well as networking overheads. Adding _discovery_ pattern allows both components know facilities each other.
 
 ### 1.2. Protocol Overview
 
@@ -38,7 +38,7 @@ ITMP is language agnostic, i.e. can be implemented in any programming language. 
 
 #### 1.3.4. Router Implementation Specifics
 
-This specification only deals with the protcol level. Specific ITMP Broker and Dealer implementations may differ in aspects such as support for:
+This specification only deals with the protocol level. Specific ITMP Broker and Dealer implementations may differ in aspects such as support for:
 authentication and authorization schemes,
 message persistence, and,
 management and monitoring.
@@ -88,7 +88,7 @@ This document describes ITMP as in client-to-client communication, client-to-rou
 
 ### 4.1. Symmetric Messaging
 
-It is important to note that though the establishment of a Transport might have a inherent asymmetry (like a TCP client establishing a WebSocket connection to a server), and Clients establish ITMP sessions by attaching to Realms on Routers, ITMP itself is designed to be fully symmetric for application components.
+It is important to note that though the establishment of a Transport might have an inherent asymmetry (like a TCP client establishing a WebSocket connection to a server), and Clients establish ITMP sessions by attaching to Realms on Routers, ITMP itself is designed to be fully symmetric for application components.
 After the transport and a session have been established, any application component may act as Caller, Callee, Publisher and Subscriber at the same time. And Routers provide the fabric on top of which ITMP runs a symmetric application messaging service.
 
 ### 4.2. Remote Procedure Call Roles
@@ -218,7 +218,7 @@ The following is a complete list of usage of IDs in the three categories for all
 
 ### 5.2. Serializations
 
-ITMP is a message based protocol that requires serialization of messages to octet sequences to be sent out on the wire.
+ITMP is a message-based protocol that requires serialization of messages to octet sequences to be sent out on the wire.
 A message serialization format is assumed that (at least) provides the following types:
 
 * "integer"
@@ -313,7 +313,7 @@ For a given "MessageType" the expected types are uniquely defined except the arg
 
 ### 6.3. Routing
 
-If node needs to send message hrough router it add address fileds before command field. Router should test type of first message element and if it is byte or text strings should iterpret it as destination address and if second filed also string it is source address.
+If node needs to send message hrough router it adds address fields before command field. Router should test type of first message element and if it is byte or text strings should interpret it as destination address and if second filed also string it is source address.
 
 ### 6.4. Message Definitions
 
@@ -483,9 +483,9 @@ Result of a call as returned to Caller if the error occur during call execution.
 | 1 | [CONNECTED, CONNECT.Request:id, peer_identifier:string, Options:dict] | confirm connection
 | 4 | [DISCONNECT, Code:integer, Reason:string, Options:dict] |  clear finish connection
 | | __Error__
-| 5 | [ERROR, Request:id, Code:integer, Reason:string, Options:dict] | error notificarion
+| 5 | [ERROR, Request:id, Code:integer, Reason:string, Options:dict] | error notification
 | | __Result__
-| 9 | [RESULT, Request:id, Result, Options:dict] | response notificarion
+| 9 | [RESULT, Request:id, Result, Options:dict] | response notification
 | | __Description__
 | 6 | [DESCRIBE, Request:id, Topic:uri, Options:dict] | get description
 | | __RPC__
@@ -598,7 +598,7 @@ A Router completes the opening of a ITMP session by sending a "CONNECTED" reply 
 where
 "Options" is a dictionary that allows to provide additional information regarding the open session (see below).
 In the ITMP Basic Profile without session authentication, a "CONNECTED" message MUST be the first message sent by the Router, directly in response to a "CONNECT" message received from the Client. Extensions in the Advanced Profile MAY include intermediate steps and messages for authentication.
-Note. The behavior if a requested "Realm" does not presently exist is router-specific. A router may e.g. automatically create the realm, or deny the establishment of the session with a "ABORT" reply message.
+Note. The behavior if a requested "Realm" does not presently exist is router-specific. A router may e.g. automatically create the realm, or deny the establishment of the session with an "ABORT" reply message.
 
 ##### 7.1.2.1. Router: Role and Feature Announcement
 
@@ -738,11 +738,11 @@ any sequence of primitive typed values encoded as byte array or base64 encoded s
 _Example_
 
 ```itmp
-go & `set pwm fow wheels drivers`( <i16`left pwm[-1280..1280]`,i16`right pwm[-1280..1280]`>) : <i32`left position`, i32`right position`, i32`time stamp$us`, i16`echolocator distance$mm`>
+go & `set pwm for wheels drivers`( <i16`left pwm[-1280..1280]`,i16`right pwm[-1280..1280]`>) : <i32`left position`, i32`right position`, i32`time stamp$us`, i16`echolocator distance$mm`>
 
-to & `set taget position` (<i32`left target pos$ticks`, i32`right target pos$ticks`, i32`max speed$ticks per sec`,i32`acceleration$ticks per sec per sec`>) <i32`left position`,i32`right position`,i32`time stamp$us`,i32`echolocator distance$mm`>
+to & `set target position` (<i32`left target pos$ticks`, i32`right target pos$ticks`, i32`max speed$ticks per sec`,i32`acceleration$ticks per sec per sec`>) <i32`left position`,i32`right position`,i32`time stamp$us`,i32`echolocator distance$mm`>
 
-sp &`set movig speed` (<i32`left speed$ticks per sec`,i32`right speed$ticks per sec`, i32`acceleration$ticks per sec per sec`>) : <i32`left position`,i32`right position,i32`time stamp$us`, i32`echolocator distance$mm`>
+sp &`set moving speed` (<i32`left speed$ticks per sec`,i32`right speed$ticks per sec`, i32`acceleration$ticks per sec per sec`>) : <i32`left position`,i32`right position,i32`time stamp$us`, i32`echolocator distance$mm`>
 
 set &`set servos position` (<u16`srvo1$us[1000..2000]`,u16`servo2$us[1000..2000]`>)
 
@@ -770,7 +770,7 @@ Noticeable is that each topic must have at least 1 character to be valid and it 
 
 ### 9.2. Wildcards
 
-When a client subscribes to a topic it can use the exact topic the message was published to or it can subscribe to more topics at once by using wildcards. A wildcard can only be used when subscribing to topics and is not permitted when publishing a message. In the following we will look at the two different kinds one by one: single level and multi level wildcards.
+When a client subscribes to a topic it can use the exact topic the message was published to or it can subscribe to more topics at once by using wildcards. A wildcard can only be used when subscribing to topics and is not permitted when publishing a message. In the following we will look at the two different kinds one by one: single level and multi-level wildcards.
 
 __Single Level: +__
 
@@ -786,9 +786,9 @@ Any topic matches to a topic including the single level wildcard if it contains 
 -  myhome.groundfloor.kitchen.fridge.temperature
 ```
 
-__Multi Level: #__
+__Multi-Level: #__
 
-While the single level wildcard only covers one topic level, the multi level wildcard covers an arbitrary number of topic levels. In order to determine the matching topics it is required that the multi level wildcard is always the last character in the topic and it is preceded by a dot.
+While the single level wildcard only covers one topic level, the multi-level wildcard covers an arbitrary number of topic levels. In order to determine the matching topics it is required that the multi-level wildcard is always the last character in the topic and it is preceded by a dot.
 
 `myhome.groundfloor.#`
 
@@ -800,7 +800,7 @@ While the single level wildcard only covers one topic level, the multi level wil
 -  myhome.firstfloor.kitchen.temperature
 ```
 
-A client subscribing to a topic with a multi level wildcard is receiving all messages, which start with the pattern before the wildcard character, no matter how long or deep the topics will get. If you only specify the multilevel wildcard as a topic (#), it means that you will get every message sent over the broker. If you expect high throughput this is an anti pattern.
+A client subscribing to a topic with a multi-level wildcard is receiving all messages, which start with the pattern before the wildcard character, no matter how long or deep the topics will get. If you only specify the multilevel wildcard as a topic (#), it means that you will get every message sent over the broker. If you expect high throughput this is an anti-pattern.
 
 #### When topic-based wildcards are not wild
 
@@ -865,7 +865,7 @@ Each topic will be included in every message it is used in, so you should think 
 
 ##### Use only ASCII characters, avoid non printable characters
 
-Using non-ASCII UTF-8 character makes it really hard to find typos or issues related to the character set, because often they can not be displayed correctly. Unless it is really necessary we recommend avoid using non ASCII character in a topic.
+Using non-ASCII UTF-8 character makes it really hard to find typos or issues related to the character set, because often they cannot be displayed correctly. Unless it is really necessary we recommend avoid using non-ASCII character in a topic.
 
 ##### Embed a unique identifier or the ClientId into the topic
 
@@ -909,7 +909,7 @@ where
 
 "Request" MUST be a random, ephemeral ID chosen by the Subscriber and used to correlate the Broker's response with the request.
 
-"Options" MUST be a dictionary that allows to provide additional subscription request Options in a extensible way. This is described further below.
+"Options" MUST be a dictionary that allows to provide additional subscription request Options in an extensible way. This is described further below.
 
 "Topic" is the topic the Subscriber wants to subscribe to and MUST be an URI.
 
@@ -919,7 +919,7 @@ _Example_
 [16, 713845233, "com.myapp.mytopic1", {}]
 ```
 
-A Broker, receiving a "SUBSCRIBE" message, can fullfill or reject the subscription, so it answers with "SUBSCRIBED" or "ERROR" messages.
+A Broker, receiving a "SUBSCRIBE" message, can fulfill or reject the subscription, so it answers with "SUBSCRIBED" or "ERROR" messages.
 
 If the Broker is able to fulfill and allow the subscription, it answers by sending a "SUBSCRIBED" message to the Subscriber
 
@@ -954,7 +954,7 @@ where
 
 "Code" MUST be an code that gives the error of why the request could not be fulfilled.
 
-"Description" MUST be an string that gives the error of why the request could not be fulfilled.
+"Description" MUST be a string that gives the error of why the request could not be fulfilled.
 
 _Example_
 
@@ -1010,7 +1010,7 @@ where
 
 "Code" MUST be an code that gives the error of why the request could not be fulfilled.
 
-"Description" MUST be an string that gives the error of why the request could not be fulfilled.
+"Description" MUST be a string that gives the error of why the request could not be fulfilled.
 
 _Example_
 
@@ -1029,7 +1029,7 @@ The message flow between Publishers, a Broker and Subscribers for publishing to 
 
 #### 9.4.1. EVENT
 
-When a Publisher requests to publish an event to some topic, it sends a "EVENT" message to a Broker:
+When a Publisher requests to publish an event to some topic, it sends an "EVENT" message to a Broker:
 
 ```itmp
 [EVENT, Request:id, Topic:uri, Arguments, Options:dict]
@@ -1069,7 +1069,7 @@ _Example_
 
 Use Event when …
 
-* You have a complete or almost stable connection between sender and receiver. A classic use case is when connecting a test client or a front end application to a MQTT broker over a wired connection.
+* You have a complete or almost stable connection between sender and receiver. A classic use case is when connecting a test client or a front-end application to a MQTT broker over a wired connection.
 * You don’t care if one or more messages are lost once a while. That is sometimes the case if the data is not that important or will be send at short intervals, where it is okay that messages might get lost.
 * You don’t need any message queuing. Messages are only queued for disconnected clients if they have subscribed for publishable topics.
 
@@ -1128,7 +1128,7 @@ where
 
 "PUBLISH.Request" is the ID from the original publication request.
 
-"Publication" is a ID chosen by the Broker for the publication.
+"Publication" is an ID chosen by the Broker for the publication.
 
 _Example_
 
@@ -1148,7 +1148,7 @@ where
 
 "PUBLISH.Request" is the ID from the original publication request.
 
-"Code" is an number that gives the error of why the request could not be fulfilled.
+"Code" is a number that gives the error of why the request could not be fulfilled.
 
 _Example_
 
@@ -1190,7 +1190,7 @@ where
 "Procedure" is the URI of the procedure to be called.
 if uri denote event topic, CALL make polling for event and can be used for get an event without subscribing,in such a way RESULT bring Event if so and ERROR will return if no message.
 
-"Arguments" is a list of positional call arguments (each of arbitrary type) or dictionary of keyword call arguments. The Arguments may be empty or omitted.The Arguments can npt be null because it mark following arguments message present.
+"Arguments" is a list of positional call arguments (each of arbitrary type) or dictionary of keyword call arguments. The Arguments may be empty or omitted.The Arguments cannot be null because it marks following arguments message present.
 
 _Example_
 
@@ -1258,7 +1258,7 @@ _Example_
 
 #### 10.2.3. ARGUMENTS
 
-If the Caller shold send a lot of arguments or produse the arguments for long time or the arguments is too big to send it as single message, it send several "ARGUMENTS" message to the Dealer after the CALL message:
+If the Caller should send a lot of arguments or produce the arguments for long time or the arguments is too big to send it as single message, it sends several "ARGUMENTS" message to the Dealer after the CALL message:
 
 ```itmp
 [CALL, Request:id, Procedure:uri, null, Options:dict]
@@ -1300,7 +1300,7 @@ _Example_
 
 #### 10.2.3. PROGRESS
 
-If the Callee produse the result for long time or part by part or the result is too big to send it as single message, it answers by sending several "PROGRESS" message to the Dealer before the RESULT message sent:
+If the Callee produce the result for long time or part by part or the result is too big to send it as single message, it answers by sending several "PROGRESS" message to the Dealer before the RESULT message sent:
 
 ```itmp
 [PROGRESS, CALL.Request:id, 0, Arguments, Options:dict]
@@ -1316,7 +1316,7 @@ where
 
 "Arguments" is a list of positional result elements (each of arbitrary type) or dictionary of keyword result elements (each of arbitrary type). The Arguments may be empty or even omitted.
 
-"Options"is a dictionary that allows to provide additional options.
+"Options" is a dictionary that allows to provide additional options.
 
 _Example_
 
@@ -1355,7 +1355,7 @@ _Example_
 
 #### 10.2.3. CANCEL
 
-If the Callee produse the result using PROGRESS messages Caller can stop the call by sending "CANCEL" message to the Dealer:
+If the Callee produce the result using PROGRESS messages Caller can stop the call by sending "CANCEL" message to the Dealer:
 
 `[PROGRESS, CALL.Request:id, 0, Arguments, Options:dict]`
 
@@ -1371,7 +1371,7 @@ where
 
 "Arguments" is a list of positional result elements (each of arbitrary type) or dictionary of keyword result elements (each of arbitrary type). The Arguments may be empty or even omitted.
 
-"Options"is a dictionary that allows to provide additional options.
+"Options" is a dictionary that allows to provide additional options.
 
 _Example_
 
@@ -1448,7 +1448,7 @@ A Dealer or Broker could not determine if the Peer is authorized to perform a jo
 
 ### 11.3. 403 Forbidden
 
-When a Peer restrict using some methodta or arguments they MUST respond with an "ERROR" message and give the code 403 for any requests that violate restrictions
+When a Peer restrict using some methods or arguments they MUST respond with an "ERROR" message and give the code 403 for any requests that violate restrictions
 
 ### 11.4. 404 Not Found
 
@@ -1492,7 +1492,7 @@ reserved code
 
 ### 11.14. 500 Internal Server Error
 
-A Node could not perform a call or other action, since internel error.
+A Node could not perform a call or other action, since internal error.
 
 ### 11.15. 501 Not Implemented
 
@@ -1583,14 +1583,14 @@ The verification of the Router server certificate can happen
 
 1. against a certificate trust database that comes with the Clients operating system
 2. against an issuing certificate/key hard-wired into the Client
-3. by using new mechanisms like DNS-based Authentication of Named Enitities (DNSSEC)/TLSA
+3. by using new mechanisms like DNS-based Authentication of Named Entities (DNSSEC)/TLSA
 
 Further, when a Client connects to a Router over a local-only transport such as Unix domain sockets, the file system permissions can be used to create implicit trust. E.g. if only the OS user under which the Router runs has the permission to create a Unix domain socket under a specific path, Clients connecting to that path can trust in the router authenticity.
 
 ### 14.3. Client Authentication
 
 Authentication of a Client to a Router at the ITMP level is not part of the basic profile.
-When running over TLS, a Router MAY authenticate a Client at the transport level by doing a _client certificate based authentication_.
+When running over TLS, a Router MAY authenticate a Client at the transport level by doing a _client certificate-based authentication_.
 
 #### 14.3.1. Routers are trusted
 
